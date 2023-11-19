@@ -11,7 +11,9 @@ import {
   Space,
   Center,
   Checkbox,
-  Select
+  Select,
+  Radio,
+  Group
 } from "@mantine/core";
 
 import styles from "@/app/student/page.module.css";
@@ -91,7 +93,7 @@ export default function Home() {
   return (
     <main>
       <div className={styles.mainContainer}>
-        <Navbar userT="admin" />
+        <Navbar userT="student" />
 
         <div className={styles.content}>
           <div className={styles.leftContainer}>
@@ -217,22 +219,52 @@ export default function Home() {
 
               <div className={styles.form2}>
                 <div className={styles.form2Input}>
-                  <Text>Lunch</Text>
-                  <Select
-                    placeholder="Select place"
-                    data={['UC Cafeteria', 'Hostel']}
-                    radius="xl"
-                    size="md"
-                    className={styles.inputText}
-                  />
-                  <Text>Tea</Text>
-                  <Select
-                    placeholder="Select place"
-                    data={['UC Cafeteria', 'Hostel']}
-                    radius="xl"
-                    size="md"
-                    className={styles.inputText}
-                  />
+                  {/* <Text>Lunch</Text> */}
+                  <Radio.Group
+                    name="lunchPlace"
+                    label="Lunch"
+                    withAsterisk
+                  >
+                    <Group mt="xs">
+                      <Radio value="uc" label="UC Cafeteria" />
+                      <Radio value="mess" label="Hostel Mess" />
+                    </Group>
+                  </Radio.Group>
+                  <Radio.Group
+                    name="teaPlace"
+                    label="Tea"
+                    withAsterisk
+                  >
+                    <Group mt="xs">
+                      <Radio value="uc" label="UC Cafeteria" />
+                      <Radio value="mess" label="Hostel Mess" />
+                    </Group>
+                  </Radio.Group>
+                  {/* <Radio.Group
+                    name="favoriteFramework"
+                    label="Lunch"
+                    description=""
+                    withAsterisk
+                  >
+                  <Group>
+                      <Radio
+                        iconColor="dark.8"
+                        color="blue"
+                        label="UC Cafeteria"
+                        name="check"
+                        value="check"
+                        defaultChecked
+                      />
+                      <Radio
+                        iconColor="dark.8"
+                        color="blue"
+                        label="Hostel Mess"
+                        name="check"
+                        value="check"
+                        
+                      />
+                    </Group>
+                    </Radio.Group> */}
                 </div>
                 <Button
                   // rightIcon={<Image src={FlowIcon} alt="Flow Icon" />}
@@ -249,7 +281,7 @@ export default function Home() {
             <div className={styles.rightSubContainer1}>
               <div className={styles.headingText2}>
                 <Text ta="center" className={styles.headingText}>
-                  Place Count
+                  Booking Details
                 </Text>
               </div>
               <div className={styles.bookingTable}>
