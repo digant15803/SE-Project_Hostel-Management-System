@@ -6,31 +6,33 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 
-// email and username same
+
 const resolvers = {
   Mutation: {
-    signup: async (_, { signupInput: { username, email, password } }) => {
-      const oldUser = await User.findOne({ email });
-      if (oldUser)
-        throw new GraphQLError("User with same email already exists", {
-          extensions: {
-            code: "USER_ALREADY_EXISTS",
-          },
-        });
+    signup: async (_, { signupInput: { User_ID, User_Email, User_Password, User_Type} }) => {
+      // const oldUser = await User.findUserByEmail({ email });
+      // if (oldUser)
+      //   throw new GraphQLError("User with same email already exists", {
+      //     extensions: {
+      //       code: "USER_ALREADY_EXISTS",
+      //     },
+      //   });
 
       try {
-        var encryptedPassword = await bcrypt.hash(password, 10);
-        const user = new User({
-          username: username,
-          email: email.toLowerCase(),
-          password: encryptedPassword,
+        var encryptedPassword = await bcrypt.hash(User_Password, 10);
+        console.log('Password hashed successfully');
+        const user = User.initializeDatabase({
+          User_ID: User_ID,
+          User_Email: User_Email.toLowerCase(),
+          User_Password: encryptedPassword,
+          User_Type: User_Type
         });
+        console.log('user is done');
         const token = jwt.sign(
           {
-            user_id: user._id,
-            username: user.username,
-            email: user.email,
-            role: user.role,
+            User_ID: user.User_ID,
+            User_Email: user.User_Email,
+            User_Type: user.User_Type,
           },
           process.env.JWT_SECRET,
           {
@@ -41,7 +43,7 @@ const resolvers = {
         const res = await user.save();
 
         return {
-          id: res.id,
+          User_ID: res.User_ID,
           ...res._doc,
         };
       } catch (err) {
@@ -61,13 +63,12 @@ const resolvers = {
           },
         });
       } else if (await bcrypt.compare(password, user.password)) {
-        if (user.role === "customer") {
+        if (user.User_Type === "student") {
           const token = jwt.sign(
             {
-              user_id: user._id,
-              username: user.username,
-              email: user.email,
-              role: user.role,
+              user_id: user.User_ID,
+              email: user.User_Email,
+              role: user.User_Type,
             },
             process.env.JWT_SECRET,
             {
@@ -78,10 +79,9 @@ const resolvers = {
         } else {
           const token = jwt.sign(
             {
-              user_id: user._id,
-              username: user.username,
-              email: user.email,
-              role: user.role,
+              user_id: user.User_ID,
+              email: user.User_Email,
+              role: user.User_Type,
             },
             process.env.JWT_SECRET,
             {

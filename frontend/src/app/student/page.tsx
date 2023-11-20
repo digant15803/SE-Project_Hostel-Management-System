@@ -1,6 +1,10 @@
 "use client";
 import Image from "next/image";
 import Navbar from "@/components/navbar/Navbar";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { ReactElement } from "react";
+import RegComp from "@/components/orderDetails/orderDetails";
+
 import {
   Text,
   Table,
@@ -13,12 +17,14 @@ import {
   Checkbox,
   Select,
   Radio,
-  Group
+  Group, 
+  Modal
 } from "@mantine/core";
 
 import styles from "@/app/student/page.module.css";
 import star from "@/assets/booking/Star 1.svg";
-import { ReactElement } from "react";
+
+
 
 const elements = [
   [6, 12.011, ["C", "N"], "Carbon"],
@@ -45,6 +51,12 @@ const elements2 = [
 ];
 
 export default function Home() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const closeOrderModal = () => {
+    router.push("/student");
+  };
   let seasonsList: Array<ReactElement> = [];
 
   function roer(subR: Array<string>) {
@@ -211,6 +223,64 @@ export default function Home() {
           </div>
           <div className={styles.rightContainer}>
             <div className={styles.rightSubContainer1}>
+
+            <div className={styles.headingText2}>
+                <Text ta="center" className={styles.headingText}>
+                  Laundry Booking
+                </Text>
+              </div>
+              <div className={styles.laundryBooking}>
+              <Select
+                label="Select slot"
+                placeholder="Select Timing"
+                data={['React', 'Angular', 'Vue', 'Svelte']}
+              />
+              </div>
+
+              {/* <div className={styles.headingText2}>
+                <Text ta="center" className={styles.headingText}>
+                  Place Preference
+                </Text>
+              </div> */}
+
+              {/* <div className={styles.form2}>
+                <div className={styles.form2Input}>
+                  <Text>Lunch</Text>
+                  <Radio.Group
+                    name="lunchPlace"
+                    label="Lunch"
+                    withAsterisk
+                  >
+                    <Group mt="xs">
+                      <Radio value="uc" label="UC Cafeteria" />
+                      <Radio value="mess" label="Hostel Mess" />
+                    </Group>
+                  </Radio.Group>
+                  <Radio.Group
+                    name="teaPlace"
+                    label="Tea"
+                    withAsterisk
+                  >
+                    <Group mt="xs">
+                      <Radio value="uc" label="UC Cafeteria" />
+                      <Radio value="mess" label="Hostel Mess" />
+                    </Group>
+                  </Radio.Group>
+                </div>
+                <Button
+                  // rightIcon={<Image src={FlowIcon} alt="Flow Icon" />}
+                  size="md"
+                  classNames={{
+                    root: styles.defaultRadius,
+                  }}
+                  // onClick={authenticateUser}
+                >
+                  Confirm
+                </Button>
+              </div> */}
+            </div>
+            <div className={styles.rightSubContainer1}>
+
               <div className={styles.headingText2}>
                 <Text ta="center" className={styles.headingText}>
                   Place Preference
@@ -240,31 +310,6 @@ export default function Home() {
                       <Radio value="mess" label="Hostel Mess" />
                     </Group>
                   </Radio.Group>
-                  {/* <Radio.Group
-                    name="favoriteFramework"
-                    label="Lunch"
-                    description=""
-                    withAsterisk
-                  >
-                  <Group>
-                      <Radio
-                        iconColor="dark.8"
-                        color="blue"
-                        label="UC Cafeteria"
-                        name="check"
-                        value="check"
-                        defaultChecked
-                      />
-                      <Radio
-                        iconColor="dark.8"
-                        color="blue"
-                        label="Hostel Mess"
-                        name="check"
-                        value="check"
-                        
-                      />
-                    </Group>
-                    </Radio.Group> */}
                 </div>
                 <Button
                   // rightIcon={<Image src={FlowIcon} alt="Flow Icon" />}
@@ -276,16 +321,19 @@ export default function Home() {
                 >
                   Confirm
                 </Button>
-              </div>
-            </div>
-            <div className={styles.rightSubContainer1}>
-              <div className={styles.headingText2}>
+              
+              {/* <div className={styles.headingText2}>
                 <Text ta="center" className={styles.headingText}>
-                  Booking Details
+                  Laundry Booking
                 </Text>
               </div>
-              <div className={styles.bookingTable}>
-                <Table
+              <div className={styles.laundryBooking}>
+              <Select
+                label="Select slot"
+                placeholder="Select Timing"
+                data={['React', 'Angular', 'Vue', 'Svelte']}
+              /> */}
+                {/* <Table
                   stickyHeader
                   stickyHeaderOffset={0}
                   horizontalSpacing="xl"
@@ -301,12 +349,20 @@ export default function Home() {
                     </Table.Tr>
                   </Table.Thead>
                   <Table.Tbody>{rows2}</Table.Tbody>
-                </Table>
+                </Table> */}
               </div>
             </div>
           </div>
         </div>
       </div>
+      <Modal
+          opened={searchParams.get('authModal') === "booking"}
+          onClose={closeOrderModal}
+          withCloseButton={false}
+          size="md"
+        >
+          <RegComp/>
+        </Modal>
     </main>
   );
 }

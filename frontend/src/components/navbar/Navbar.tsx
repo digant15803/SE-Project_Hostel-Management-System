@@ -31,6 +31,19 @@ export default function Navbar({userT}:{userT:string}){
                     </Link>
                 </div>
             }
+            {userT === "student" && 
+                <div className={styles.menu}>
+                    <Link
+                        href={{
+                        pathname: "/student",
+                        query: { authModal: "booking" },
+                        }}>
+                        <Text fw={700}> Your Booking </Text>
+                    </Link>
+                    
+                </div>
+            }
+
             <div className={styles.profileDiv}>
                 <div className={styles.profile}>
                     <Text fw={700}>Virat Kohli</Text>
