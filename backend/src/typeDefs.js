@@ -3,10 +3,9 @@ const { gql } = require("graphql-tag");
 // need to change by own schema
 module.exports = gql`
   type User{
-    User_ID: String
-    User_Email: String
-    User_Password: String
-    User_Type: String
+    username: String
+    password: String
+    position: String
   }
   input signupInput {
     User_ID: String
