@@ -11,7 +11,7 @@ import ProfilePhoto from "@/assets/general/ProfilePhoto.png"
 
 
 
-export default function Navbar({userT}:{userT:string}){
+export default function Navbar({userT}){
     const searchParams = useSearchParams();
     const type = searchParams.get('userType');
     return(
@@ -26,7 +26,7 @@ export default function Navbar({userT}:{userT:string}){
                         }}>
                         <Text fw={700}> User Registration </Text>
                     </Link>
-                    <Link href={"/admin"}>
+                    <Link href={"/admin/userDetails"}>
                     <Text fw={700}> User Details </Text>
                     </Link>
                 </div>

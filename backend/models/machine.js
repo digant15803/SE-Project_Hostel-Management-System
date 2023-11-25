@@ -11,7 +11,7 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       primaryKey: true
     },
-    numberofslots: {
+    slotsAva: {
       type: DataTypes.INTEGER,
       allowNull: false
     }

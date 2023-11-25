@@ -1,10 +1,8 @@
 "use client"
-
 import Navbar from "@/components/navbar/Navbar"
 import {Text, Table, TableData, TextInput, Button, Space, Center} from "@mantine/core"
 
-import styles from "@/app/housekeeping/page.module.css"
-import { ReactElement } from "react";
+import styles from "@/app/admin/userDetails/page.module.css"
 
 
 
@@ -36,7 +34,7 @@ export default function Home() {
               <div className={styles.mContainer}>
                 <div className={styles.heading}>
                   <Text ta="center" className={styles.headingText}>
-                    House Keeping
+                    User Details
                   </Text>
                 </div>
                 <div className={styles.subContainer}>

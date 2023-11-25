@@ -79,10 +79,10 @@ const SocialMediaIconsList = SocialMediaIcons.map(
     return (
       <ImageStackComponent
         key={index}
-        link={CONTACT_LINKS[socialMediaIconName as keyof typeof CONTACT_LINKS]}
-        normalDisplay={images[socialMediaIconName as keyof typeof images]}
+        link={CONTACT_LINKS[socialMediaIconName]}
+        normalDisplay={images[socialMediaIconName]}
         hoverDisplay={
-          images[(socialMediaIconName + "H") as keyof typeof images]
+          images[(socialMediaIconName + "H")]
         }
         iconsClass={styles.Icons}
         iconsWrapperClass={styles.IconsSubWrapper}
@@ -136,7 +136,7 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <Button>
-                    See Photos ->
+                    See Photos
                   </Button>
                 </div>
               </div>
@@ -188,21 +188,21 @@ export default function LandingPage() {
         <footer className={styles.Wrapper}>
           <div className={styles.UpperContainer}>
             <div className={styles.Links}>
-              <div ref={footerCompanyLinksRef as any}>
+              <div ref={footerCompanyLinksRef}>
                 <span>
                   Company{" "}
                   {/* <Image src={arrorwImg} className={styles.Arrow} alt="arrow" /> */}
                 </span>
                 <ul>{CompanyList}</ul>
               </div>
-              <div ref={footerCompanyLinksRef as any}>
+              <div ref={footerCompanyLinksRef}>
                 <span>
                   Legal{" "}
                   {/* <Image src={arrorwImg} className={styles.Arrow} alt="arrow" /> */}
                 </span>
                 <ul>{LegalList}</ul>
               </div>
-              <div ref={footerCompanyLinksRef as any}>
+              <div ref={footerCompanyLinksRef}>
                 <span>
                   Support{" "}
                   {/* <Image src={arrorwImg} className={styles.Arrow} alt="" /> */}

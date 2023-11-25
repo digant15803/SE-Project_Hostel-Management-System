@@ -4,14 +4,7 @@ import Image from "next/image";
 
 import Styles from "./ImageStackComponent.module.css";
 
-function ImageStackComponent(props: {
-  link: string;
-  iconsClass: string;
-  iconsWrapperClass: string;
-  normalDisplay: string;
-  hoverDisplay: string;
-  StackImageStyle: React.CSSProperties;
-}) {
+function ImageStackComponent(props) {
   const [displayClass, setDisplayClass] = useState(
     `${Styles.NormalState} ${Styles.Img}`
   );

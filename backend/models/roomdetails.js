@@ -1,38 +1,38 @@
 const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('room', {
-    roomnumber: {
+  return sequelize.define('roomdetails', {
+    roomNo: {
       type: DataTypes.INTEGER,
       allowNull: false,
       primaryKey: true
     },
-    studentid1: {
+    studentId1: {
       type: DataTypes.STRING(45),
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'student',
-        key: 'studentid'
+        key: 'studentId'
       }
     },
-    studentid2: {
+    studentId2: {
       type: DataTypes.STRING(45),
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'student',
-        key: 'studentid'
+        key: 'studentId'
       }
     },
-    studentid3: {
+    studentId3: {
       type: DataTypes.STRING(45),
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'student',
-        key: 'studentid'
+        key: 'studentId'
       }
     }
   }, {
     sequelize,
-    tableName: 'room',
+    tableName: 'roomdetails',
     timestamps: false,
     indexes: [
       {
@@ -40,28 +40,28 @@ module.exports = function(sequelize, DataTypes) {
         unique: true,
         using: "BTREE",
         fields: [
-          { name: "roomnumber" },
+          { name: "roomNo" },
         ]
       },
       {
         name: "studentid1",
         using: "BTREE",
         fields: [
-          { name: "studentid1" },
+          { name: "studentId1" },
         ]
       },
       {
         name: "studentid2",
         using: "BTREE",
         fields: [
-          { name: "studentid2" },
+          { name: "studentId2" },
         ]
       },
       {
         name: "studentid3",
         using: "BTREE",
         fields: [
-          { name: "studentid3" },
+          { name: "studentId3" },
         ]
       },
     ]

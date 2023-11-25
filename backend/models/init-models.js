@@ -1,49 +1,52 @@
 var DataTypes = require("sequelize").DataTypes;
-var _bookhousekeeping = require("./bookhousekeeping");
-var _bookmachine = require("./bookmachine");
 var _cleaning = require("./cleaning");
 var _machine = require("./machine");
+var _machineslotbooking = require("./machineslotbooking");
 var _manager = require("./manager");
 var _place = require("./place");
-var _room = require("./room");
+var _roomcleaning = require("./roomcleaning");
+var _roomdetails = require("./roomdetails");
 var _student = require("./student");
 var _user = require("./user");
 
 function initModels(sequelize) {
-  var bookhousekeeping = _bookhousekeeping(sequelize, DataTypes);
-  var bookmachine = _bookmachine(sequelize, DataTypes);
   var cleaning = _cleaning(sequelize, DataTypes);
   var machine = _machine(sequelize, DataTypes);
+  var machineslotbooking = _machineslotbooking(sequelize, DataTypes);
   var manager = _manager(sequelize, DataTypes);
   var place = _place(sequelize, DataTypes);
-  var room = _room(sequelize, DataTypes);
+  var roomcleaning = _roomcleaning(sequelize, DataTypes);
+  var roomdetails = _roomdetails(sequelize, DataTypes);
   var student = _student(sequelize, DataTypes);
   var user = _user(sequelize, DataTypes);
   var sequelize = sequelize;
 
-  bookhousekeeping.belongsTo(student, { as: "name_student", foreignKey: "name"});
-  student.hasMany(bookhousekeeping, { as: "bookhousekeepings", foreignKey: "name"});
-  bookmachine.belongsTo(student, { as: "student", foreignKey: "studentid"});
-  student.hasMany(bookmachine, { as: "bookmachines", foreignKey: "studentid"});
-  place.belongsTo(student, { as: "student", foreignKey: "studentid"});
-  student.hasOne(place, { as: "place", foreignKey: "studentid"});
-  room.belongsTo(student, { as: "studentid1_student", foreignKey: "studentid1"});
-  student.hasMany(room, { as: "rooms", foreignKey: "studentid1"});
-  room.belongsTo(student, { as: "studentid2_student", foreignKey: "studentid2"});
-  student.hasMany(room, { as: "studentid2_rooms", foreignKey: "studentid2"});
-  room.belongsTo(student, { as: "studentid3_student", foreignKey: "studentid3"});
-  student.hasMany(room, { as: "studentid3_rooms", foreignKey: "studentid3"});
+
+  machineslotbooking.belongsTo(student, { as: "student", foreignKey: "studentId"});
+  student.hasMany(machineslotbooking, { as: "machineslotbookings", foreignKey: "studentId"});
+  place.belongsTo(student, { as: "student", foreignKey: "studentId"});
+  student.hasOne(place, { as: "place", foreignKey: "studentId"});
+  roomcleaning.belongsTo(student, { as: "student", foreignKey: "studentId"});
+  student.hasMany(roomcleaning, { as: "roomcleanings", foreignKey: "studentId"});
+  roomdetails.belongsTo(student, { as: "studentId1_student", foreignKey: "studentId1"});
+  student.hasMany(roomdetails, { as: "roomdetails", foreignKey: "studentId1"});
+  roomdetails.belongsTo(student, { as: "studentId2_student", foreignKey: "studentId2"});
+  student.hasMany(roomdetails, { as: "studentId2_roomdetails", foreignKey: "studentId2"});
+  roomdetails.belongsTo(student, { as: "studentId3_student", foreignKey: "studentId3"});
+  student.hasMany(roomdetails, { as: "studentId3_roomdetails", foreignKey: "studentId3"});
   manager.belongsTo(user, { as: "username_user", foreignKey: "username"});
   user.hasMany(manager, { as: "managers", foreignKey: "username"});
+  student.belongsTo(user, { as: "username_user", foreignKey: "username"});
+  user.hasMany(student, { as: "students", foreignKey: "username"});
 
   return {
-    bookhousekeeping,
-    bookmachine,
     cleaning,
     machine,
+    machineslotbooking,
     manager,
     place,
-    room,
+    roomcleaning,
+    roomdetails,
     student,
     user,
     sequelize,

@@ -12,70 +12,65 @@ import {
   Select
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-
-
-import Google from "@/assets/general/Google.svg";
+import { gql, useMutation } from "@apollo/client";
 
 import styles from "./RegComp.module.css";
-import Image from "next/image";
-// import useSWRMutation from "swr/mutation";
 
-// import { authenticationFetcher } from "@/hooks/auth.swr";
-// import {
-//   showSuccessNotification,
-//   showErrorNotification,
-// } from "@/utils/notifications.helper";
-// import SWR_CONSTANTS from "@/utils/swrConstants";
-// import { mutate } from "swr";
+import {
+  showSuccessNotification,
+  showErrorNotification,
+} from "@/utils/notifications.helper";
+
+
+const Signup = gql(`
+    mutation Signup($signupInput: signupInput) { 
+      signup(signupInput: $signupInput) {
+        id 
+        name
+        username
+      }
+    }
+  `);
 
 function RegComp() {
   const router = useRouter();
   const form = useForm({
     initialValues: {
       username: "",
-      password: "",
-      userType: "user",
+      id: "",
+      name: "",
+      position: "",
     },
 
     validate: {
-      username: (value: string) => value.trim().length > 0,
-      password: (value: string) => value.trim().length > 0,
+      username: (value) => value.trim().length > 0,
+      id: (value) => value.trim().length > 0,
+      name: (value) => value.trim().length > 0,
+      position: (value) => value.trim().length > 0,
     },
   });
+  const [signup] = useMutation(Signup);
 
-  const [user, setUser] = useState<string>("");
-
-//   const { trigger: authenticate, isMutating } = useSWRMutation(
-//     SWR_CONSTANTS.AUTHENTICATE_USER,
-//     authenticationFetcher
-//   );
-
-//   const authenticateUser = async () => {
-//     try {
-//       const data = await authenticate({
-//         authType: type,
-//         data: form.values,
-//       });
-//       console.log("AUTHENTICATE -- SUCCESS", data);
-//       const userData = await mutate(SWR_CONSTANTS.GET_USER);
-//       console.log("AUTHENTICATE -- USER", userData);
-//       if (!userData || !userData.id) {
-//         return showErrorNotification("Failed to Login", "User not found");
-//       }
-//       router.push(userData.type === "1" ? "/artist" : "/player");
-//       showSuccessNotification(
-//         "Login Success",
-//         "You Have logged in Successfully, Continue to explore MeloMint"
-//       );
-//     } catch (error: any) {
-//       console.log("AUTHENTICATE -- ERROR", error);
-//       showErrorNotification("Failed to Login", error?.message);
-//     }
-//   };
-
-  useEffect(() => {
-    console.log(user);
-  }, [user]);
+  const createUser = async () => {
+    try {
+      const {loading, data} = await signup({
+        variables: { "signupInput": {
+          "id": form.values.id,
+          "name": form.values.name,
+          "position": form.values.position,
+          "username": form.values.username
+        }},
+      });
+      console.log("AUTHENTICATE -- SUCCESS", data);
+      showSuccessNotification(
+        "User Created",
+        "Password should be created by user."
+      );
+    } catch (error) {
+      console.log("AUTHENTICATE -- ERROR", error);
+      showErrorNotification("Failed to create user", error?.message);
+    }
+  };
 
   return (
     <div className={styles.container}>
@@ -83,8 +78,8 @@ function RegComp() {
         loaderProps={{
           variant: "bars",
         }}
-        // visible={isMutating}
-        // overlayBlur={2}
+        visible={signup.loading}
+        overlayProps={{ radius: "sm", blur: 2 }}
       />
 
       <Title order={4}>
@@ -102,16 +97,17 @@ function RegComp() {
                   }}
                   size="md"
                 />
-                <TextInput
+                {/* <TextInput
                   placeholder="Password"
                   {...form.getInputProps("password")}
                   classNames={{
                     input: styles.defaultRadius,
                   }}
                   size="md"
-                />
+                /> */}
                 <Select
                   placeholder="Position"
+                  {...form.getInputProps("position")}
                   classNames={{
                     input: styles.defaultRadius,
                   }}
@@ -120,7 +116,15 @@ function RegComp() {
                 />
                 <TextInput 
                   placeholder="Id"
-                  {...form.getInputProps("Id")}
+                  {...form.getInputProps("id")}
+                  classNames={{
+                    input: styles.defaultRadius,
+                  }}
+                  size="md"
+                />
+                <TextInput 
+                  placeholder="Name"
+                  {...form.getInputProps("name")}
                   classNames={{
                     input: styles.defaultRadius,
                   }}
@@ -129,12 +133,11 @@ function RegComp() {
               </div>
             <Button
               fullWidth
-              // rightIcon={<Image src={FlowIcon} alt="Flow Icon" />}
               size="md"
               classNames={{
                 root: styles.defaultRadius,
               }}
-              // onClick={authenticateUser}
+              onClick={createUser}
             >
               Create Account
             </Button>

@@ -1,13 +1,13 @@
 const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('bookmachine', {
-    studentid: {
+  return sequelize.define('machineslotbooking', {
+    studentId: {
       type: DataTypes.STRING(45),
       allowNull: false,
       primaryKey: true,
       references: {
         model: 'student',
-        key: 'studentid'
+        key: 'studentId'
       }
     },
     time: {
@@ -21,7 +21,7 @@ module.exports = function(sequelize, DataTypes) {
     }
   }, {
     sequelize,
-    tableName: 'bookmachine',
+    tableName: 'machineslotbooking',
     timestamps: false,
     indexes: [
       {
@@ -29,7 +29,7 @@ module.exports = function(sequelize, DataTypes) {
         unique: true,
         using: "BTREE",
         fields: [
-          { name: "studentid" },
+          { name: "studentId" },
           { name: "date" },
         ]
       },

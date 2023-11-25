@@ -3,7 +3,7 @@ import Image from "next/image";
 import Navbar from "@/components/navbar/Navbar";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { ReactElement } from "react";
-import RegComp from "@/components/orderDetails/orderDetails";
+import RegComp from "@/components/viewbooking/bookingDetails";
 
 import {
   Text,
@@ -57,11 +57,11 @@ export default function Home() {
   const closeOrderModal = () => {
     router.push("/student");
   };
-  let seasonsList: Array<ReactElement> = [];
+  let seasonsList = [];
 
-  function roer(subR: Array<string>) {
+  function roer(subR) {
     seasonsList = [];
-    subR.forEach((season: string, index: number) => {
+    subR.forEach((season, index) => {
       seasonsList.push(
         <Center>
           <div>{season}</div>

@@ -1,6 +1,5 @@
 "use client";
 
-// import AuthComp from "@/components/auth/AuthComp";
 import { Button, Modal } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import LandingPage from "@/components/index/LandingPage";

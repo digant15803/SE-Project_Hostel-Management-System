@@ -45,11 +45,11 @@ export default function Home() {
     router.push("/admin");
   };
 
-  let seasonsList:Array<ReactElement> = [];
+  let seasonsList = [];
 
-  function roer(subR:Array<string>){
+  function roer(subR){
     seasonsList = []
-    subR.forEach((season:string, index:number) => {
+    subR.forEach((season, index) => {
       seasonsList.push(<Center><div>{season}</div></Center>);
       if(index<subR.length-1){
         seasonsList.push(<Space h="sm" />);

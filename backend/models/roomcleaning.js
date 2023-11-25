@@ -1,31 +1,31 @@
 const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('bookhousekeeping', {
-    roomnumber: {
+  return sequelize.define('roomcleaning', {
+    roomNo: {
       type: DataTypes.INTEGER,
       allowNull: false,
       primaryKey: true
     },
-    name: {
+    studentId: {
       type: DataTypes.STRING(100),
-      allowNull: true,
+      allowNull: false,
       references: {
         model: 'student',
-        key: 'name'
+        key: 'studentId'
       }
     },
     time: {
       type: DataTypes.TIME,
       allowNull: false
     },
-    bedsheetchange: {
-      type: DataTypes.BOOLEAN,
+    bedSheetChange: {
+      type: DataTypes.TINYINT,
       allowNull: true,
       defaultValue: 0
     }
   }, {
     sequelize,
-    tableName: 'bookhousekeeping',
+    tableName: 'roomcleaning',
     timestamps: false,
     indexes: [
       {
@@ -33,14 +33,14 @@ module.exports = function(sequelize, DataTypes) {
         unique: true,
         using: "BTREE",
         fields: [
-          { name: "roomnumber" },
+          { name: "roomNo" },
         ]
       },
       {
         name: "name",
         using: "BTREE",
         fields: [
-          { name: "name" },
+          { name: "studentId" },
         ]
       },
     ]

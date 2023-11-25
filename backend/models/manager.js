@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('manager', {
-    id: {
+    managerId: {
       type: DataTypes.STRING(45),
       allowNull: false,
       primaryKey: true
@@ -28,7 +28,7 @@ module.exports = function(sequelize, DataTypes) {
         unique: true,
         using: "BTREE",
         fields: [
-          { name: "id" },
+          { name: "managerId" },
         ]
       },
       {

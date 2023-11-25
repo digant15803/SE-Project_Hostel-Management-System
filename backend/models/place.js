@@ -1,23 +1,23 @@
 const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('place', {
-    studentid: {
+    studentId: {
       type: DataTypes.STRING(45),
       allowNull: false,
       primaryKey: true,
       references: {
         model: 'student',
-        key: 'studentid'
+        key: 'studentId'
       }
     },
-    lunchplace: {
+    lunchPlace: {
       type: DataTypes.STRING(45),
-      allowNull: true,
+      allowNull: false,
       defaultValue: "Hostel Mess"
     },
-    teaplace: {
+    teaPlace: {
       type: DataTypes.STRING(45),
-      allowNull: true,
+      allowNull: false,
       defaultValue: "Hostel Mess"
     }
   }, {
@@ -30,7 +30,7 @@ module.exports = function(sequelize, DataTypes) {
         unique: true,
         using: "BTREE",
         fields: [
-          { name: "studentid" },
+          { name: "studentId" },
         ]
       },
     ]

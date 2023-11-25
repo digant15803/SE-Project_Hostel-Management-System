@@ -7,8 +7,8 @@ module.exports = function(sequelize, DataTypes) {
       primaryKey: true
     },
     password: {
-      type: DataTypes.STRING(45),
-      allowNull: false
+      type: DataTypes.STRING(64),
+      allowNull: true
     },
     position: {
       type: DataTypes.STRING(45),

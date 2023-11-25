@@ -36,12 +36,12 @@ function RegComp() {
     },
 
     validate: {
-      username: (value: string) => value.trim().length > 0,
-      password: (value: string) => value.trim().length > 0,
+      username: (value) => value.trim().length > 0,
+      password: (value) => value.trim().length > 0,
     },
   });
 
-  const [user, setUser] = useState<string>("");
+  const [user, setUser] = useState("");
 
 //   const { trigger: authenticate, isMutating } = useSWRMutation(
 //     SWR_CONSTANTS.AUTHENTICATE_USER,
