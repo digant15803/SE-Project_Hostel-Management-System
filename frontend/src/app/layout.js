@@ -7,6 +7,7 @@ import {
 } from "@apollo/client";
 
 import { MantineProvider, ColorSchemeScript } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
 
 const manropeFont = Manrope({ subsets: ["latin"] });
 
@@ -26,7 +27,8 @@ export default function RootLayout({ children }) {
       </head>
       <body className={manropeFont.className}>
           <MantineProvider theme={theme}>
-            <Apollo children={children} />
+            <Notifications />
+              <Apollo children={children} />
           </MantineProvider>
       </body>
     </html>

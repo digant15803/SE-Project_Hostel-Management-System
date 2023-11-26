@@ -15,4 +15,6 @@ const sequelize = new Sequelize(process.env.DB_NAME, process.env.USER, process.e
 
 var models = initModels(sequelize);
 
+models.sequelize = sequelize;
+
 module.exports = models;

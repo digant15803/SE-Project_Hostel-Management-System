@@ -1,5 +1,6 @@
 "use client"
-
+import { useRouter } from "next/navigation";
+import { jwtDecode } from "jwt-decode";
 import Navbar from "@/components/navbar/Navbar"
 import {Text, Table, TableData, TextInput, Button} from "@mantine/core"
 
@@ -21,6 +22,32 @@ const elements2 = [
 
 
 export default function Home() {
+  const router = useRouter();
+  var token;
+  if (typeof window !== 'undefined') {
+    token = localStorage.getItem("token");
+    if(token===null){
+      router.push("/");
+    }
+    else{
+      const info = jwtDecode(token);
+      if(info.position==="Student"){
+        router.push("/student");
+      }
+      else if(info.position==="Mess"){
+        router.push("/mess");
+      }
+      else if(info.position==="House keeping"){
+        router.push("/housekeeping");
+      }
+      else if(info.position==="admin"){
+        router.push("/admin");
+      }
+      else{
+        router.push("/");
+      }
+    }
+  }
   const rows = elements.map((element) => (
     <Table.Tr key={element.name}>
       <Table.Td>{element.position}</Table.Td>

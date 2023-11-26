@@ -12,15 +12,17 @@ import {
 } from "@mantine/core";
 import { gql, useMutation } from "@apollo/client";
 import { useForm } from "@mantine/form";
+import { jwtDecode } from "jwt-decode";
 
 import Google from "@/assets/general/Google.svg";
+import { notifications } from "@mantine/notifications";
 
 import styles from "./AuthComp.module.css";
 import Image from "next/image";
-// import {
-//   showSuccessNotification,
-//   showErrorNotification,
-// } from "@/utils/notifications.helper";
+import {
+  showSuccessNotification,
+  showErrorNotification,
+} from "@/utils/notifications.helper";
 
 import { createHmac } from "crypto";
 const secret = 'abcdefg';
@@ -28,11 +30,7 @@ const secret = 'abcdefg';
 const Login = gql(`
     mutation Login($loginInput: loginInput) {
       login(loginInput: $loginInput) {
-        id
-        name
-        position
-        roomNo
-        username
+        token
       }
     }
   `);
@@ -40,11 +38,7 @@ const Login = gql(`
 const ChangePwd = gql(`
   mutation ChangePwd($changePwd: changePwd) {
     changePwd(changePwd: $changePwd) {
-      id
-      name
-      position
-      roomNo
-      username
+      token
     }
   }
 `);
@@ -79,20 +73,35 @@ function AuthComp() {
           }},
         });
         console.log("PASSWORD CREATED -- SUCCESS", data);
-        // showSuccessNotification(
-        //   "User Created",
-        //   "Password should be created by user."
-        // );
-        if(data.changePwd.username!=null){
+        showSuccessNotification(
+          "User Created",
+          "Password should be created by user."
+        );
+        const info = jwtDecode(data.changePwd.token);
+        localStorage.setItem("token", data.changePwd.token);
+        if(info.username!=null){
           setCreatePassword(false);
+          if(info.position==="Student"){
+            router.push("\student");
+          }
+          else if(info.position==="Mess"){
+            router.push("\mess");
+          }
+          else if(info.position==="House keeping"){
+            router.push("\housekeeping");
+          }
+          else{
+            router.push("\admin");
+          }
+          
         }
       } catch (error) {
         console.log("PASSWORD CREATION -- ERROR", error);
-        // showErrorNotification("Failed to create user", error?.message);
+        showErrorNotification("Failed to create user", error?.message);
       }
     }
     else{
-      console.log(form.values);
+      console.log(JSON.stringify(createHmac('sha256', secret).update("admin").digest('hex')).slice(1,-1));
       try {
         const {data} = await login({
           variables: { "loginInput": {
@@ -101,19 +110,34 @@ function AuthComp() {
           }},
         });
         console.log("AUTHENTICATE -- SUCCESS", data);
-        // showSuccessNotification(
-        //   "User Created",
-        //   "Password should be created by user."
-        // );
-        if(data.login.username==null){
+        showSuccessNotification(
+          "User Created",
+          "Password should be created by user."
+        );
+        const info = jwtDecode(data.login.token);
+        console.log(data.login.token);
+        console.log(info);
+        localStorage.setItem("token", data.login.token);
+        if(info.username==null){
           setCreatePassword(true);
         }
         else{
-          router.push("\student");
+          if(info.position==="Student"){
+            router.push("\student");
+          }
+          else if(info.position==="Mess"){
+            router.push("\mess");
+          }
+          else if(info.position==="House keeping"){
+            router.push("\housekeeping");
+          }
+          else{
+            router.push("\admin");
+          }
         }
       } catch (error) {
         console.log("AUTHENTICATE -- ERROR", error);
-        // showErrorNotification("Failed to create user", error?.message);
+        showErrorNotification("Failed to create user", error?.message);
       }
     }
   };

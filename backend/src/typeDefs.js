@@ -28,15 +28,39 @@ module.exports = gql`
     username: String
     password: String
   }
+  type Token {
+    token: String
+  }
+  type timeSlot{
+    time: String
+    slotsAva: Int
+  }
+  input slotCheck{
+    time: String
+  }
+  type Available{
+    flag: Boolean
+  }
+  input slotBook{
+    time: String
+    bedSheetChangeReq: Boolean
+  }
+  type Response{
+    already: Boolean
+    flag: Boolean
+  }
 
 
   type Query{
     allUser: [User]
+    timeSlots: [timeSlot]
+    slotAvailable(slotCheck: slotCheck): Available
   }
   type Mutation {
     signup(signupInput: signupInput): signUp
-    login(loginInput: loginInput): User
-    changePwd(changePwd: changePwd): User
+    login(loginInput: loginInput): Token
+    changePwd(changePwd: changePwd): Token
+    rcSlotBooking(slotBook: slotBook): Response
   }
 
 `;

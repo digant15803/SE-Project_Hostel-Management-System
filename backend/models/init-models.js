@@ -19,7 +19,7 @@ function initModels(sequelize) {
   var roomdetails = _roomdetails(sequelize, DataTypes);
   var student = _student(sequelize, DataTypes);
   var user = _user(sequelize, DataTypes);
-  var sequelize = sequelize;
+  var sequelize;
 
 
   machineslotbooking.belongsTo(student, { as: "student", foreignKey: "studentId"});

@@ -1,5 +1,4 @@
 const { GraphQLError } = require("graphql");
-const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const models = require("../models");
@@ -74,12 +73,21 @@ const resolvers = {
               },
             });
           });
+          const token = jwt.sign(
+            {
+              username: user.username,
+              position: user.position,
+              id: student.studentId,
+              name: student.name,
+              roomNo: student.roomNo,
+            },
+            process.env.JWT_SECRET,
+            {
+              expiresIn: "10d",
+            }
+          );
           return {
-            username: user.username,
-            position: user.position,
-            id: student.studentId,
-            name: student.name,
-            roomNo: student.roomNo,
+            token: token,
           };
         } else {
           const manager = await models.manager.findOne({ where: { username: user.username }},{raw: true}).catch(function (err) {
@@ -89,11 +97,20 @@ const resolvers = {
               },
             });
           });
+          const token = jwt.sign(
+            {
+              username: user.username,
+              position: user.position,
+              id: manager.managerId,
+              name: manager.name,
+            },
+            process.env.JWT_SECRET,
+            {
+              expiresIn: "10d",
+            }
+          );
           return {
-            username: user.username,
-            position: user.position,
-            id: manager.managerId,
-            name: manager.name,
+            token: token,
           };
         }
       } else {
@@ -125,6 +142,47 @@ const resolvers = {
         });
       }
     },
+    rcSlotBooking: async (_,{slotBook: {time, bedSheetChangeReq}},contextValue) => {
+      contextValue = contextValue.user;
+      const prevBooking = await models.roomcleaning.findByPk(contextValue.roomNo,{raw: true});
+      console.log(prevBooking);
+      if(prevBooking!=null){
+        return {
+          already: true,
+        }
+      }
+      else{
+        try {
+          const userData = await resolvers.Query.slotAvailable(_, { slotCheck: { time: time } });
+          if(userData.flag === true){
+            const booking = await models.roomcleaning.create({roomNo: contextValue.roomNo, studentId: contextValue.id, time: time, bedSheetChange: bedSheetChangeReq}).catch(function(err){
+              console.log(err);
+              throw new GraphQLError("Error in adding row in roomcleaning table.", {
+                extensions: {
+                  code: "ROW_NOT_ADDED",
+                },
+              });
+            })
+            return{
+              already: false,
+              flag: true,
+            }
+          }
+          else{
+            return{
+              already: false,
+              flag: false,
+            }
+          }
+        } catch (error) {
+          throw new GraphQLError("Failed to call Query", {
+            extensions: {
+              code: "CALL_ERROR",
+            },
+          });
+        }
+      }
+    }
   },
   Query:{
     allUser: async (_) => {
@@ -133,6 +191,58 @@ const resolvers = {
         return allUser;
       } catch (err) {
         throw new GraphQLError("Error fetching items", {
+          extensions: {
+            code: "FETCH_ERROR",
+          },
+        });
+      }
+    },
+    timeSlots: async (_) => {
+      try {
+        const timeSlotDeatails = await models.cleaning.findAll({raw: true}).catch(function (err){
+          console.log(err);
+          throw new GraphQLError("Error in feching the time slot details.", {
+            extensions: {
+              code: "FETCH_ERROR",
+            },
+          });
+        });
+        return timeSlotDeatails;
+      } catch (err) {
+        throw new GraphQLError("Error fetching time slots", {
+          extensions: {
+            code: "FETCH_ERROR",
+          },
+        });
+      }
+    },
+    slotAvailable: async (_, {slotCheck: {time}}) => {
+      try {
+        const timeSlotDeatail = await models.cleaning.findByPk(time,{raw: true}).catch(function (err){
+          console.log(err);
+          throw new GraphQLError("Error in changing the password.", {
+            extensions: {
+              code: "Password_Not_Changed",
+            },
+          });
+        });
+        if(timeSlotDeatail.slotsAva>0){
+          const updateRow = await models.cleaning.update({slotsAva: timeSlotDeatail.slotsAva-1}, {where: {time: time}}).catch(function (err){
+            console.log(err);
+            throw new GraphQLError("Error in changing the row of timeslot.", {
+              extensions: {
+                code: "SLOT_VALUE_NOT_CHANGED",
+              },
+            });
+          });
+          return {flag: true};
+        }
+        else{
+          return {flag: false};
+        }
+        
+      } catch (err) {
+        throw new GraphQLError("Error fetching time slots", {
           extensions: {
             code: "FETCH_ERROR",
           },

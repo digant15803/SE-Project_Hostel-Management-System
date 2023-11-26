@@ -1,9 +1,12 @@
 "use client";
+import React, { useState, useRef } from 'react';
 import Image from "next/image";
+import { jwtDecode } from "jwt-decode";
 import Navbar from "@/components/navbar/Navbar";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { ReactElement } from "react";
 import RegComp from "@/components/viewbooking/bookingDetails";
+import { gql, useMutation, useQuery } from "@apollo/client";
 
 import {
   Text,
@@ -20,88 +23,145 @@ import {
   Group, 
   Modal
 } from "@mantine/core";
+import {
+  showSuccessNotification,
+  showErrorNotification,
+} from "@/utils/notifications.helper";
 
 import styles from "@/app/student/page.module.css";
 import star from "@/assets/booking/Star 1.svg";
 
 
 
-const elements = [
-  [6, 12.011, ["C", "N"], "Carbon"],
-  [7, 12.011, ["C", "N"], "Carbon"],
-  [8, 12.011, ["C", "N"], "Carbon"],
-  [9, 12.011, ["C", "N"], "Carbon"],
-  [10, 12.011, ["C", "N"], "Carbon"],
-  [11, 12.011, ["C", "N"], "Carbon"],
-  [12, 12.011, ["C", "N"], "Carbon"],
-  [13, 12.011, ["C", "N"], "Carbon"],
-  [14, 12.011, ["C", "N"], "Carbon"],
-  [15, 12.011, ["C", "N"], "Carbon"],
-  [16, 12.011, ["C", "N"], "Carbon"],
-  [17, 12.011, ["C", "N"], "Carbon"],
-  // [7, 14.007, 'N', 'Nitrogen'],
-  // [39, 88.906, 'Y', 'Yttrium'],
-  // [56, 137.33, 'Ba', 'Barium'],
-  // [58, 140.12, 'Ce', 'Cerium'],
-];
+const TIMESLOTDETAILS = gql`
+  query timeSlotDetails {
+    timeSlots {
+      slotsAva
+      time
+    }
+  }
+`;
 
-const elements2 = [
-  { timeSlot: "11:30", BedSheetChange: "Yes", name: "Vatsal" },
-  // { timeSlot: "11:30", BedSheetChange: "Yes", name: "Vatsal" },
-];
+const BOOKSLOT = gql`
+  mutation bookSlot($slotBook: slotBook) {
+    rcSlotBooking(slotBook: $slotBook) {
+      already
+      flag
+    }
+  }
+`;
 
 export default function Home() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [desTime, setdesTime] = useState('');
+  const [bookslot] = useMutation(BOOKSLOT);
+  const [bedSheetCheck, setBedSheetCheck] = useState(false);
+  var token;
+  if (typeof window !== 'undefined') {
+    token = localStorage.getItem("token");
+    if(token===null){
+      router.push("/");
+    }
+    else{
+      const info = jwtDecode(token);
+      if(info.position==="Student"){
+        router.push("/student");
+      }
+      else if(info.position==="Mess"){
+        router.push("/mess");
+      }
+      else if(info.position==="House keeping"){
+        router.push("/housekeeping");
+      }
+      else if(info.position==="admin"){
+        router.push("/admin");
+      }
+      else{
+        router.push("/");
+      }
+    }
+  }
+  const { loading, error, data } = useQuery(TIMESLOTDETAILS,{
+    context: {
+      headers: {
+        authorization: token || "",
+      },
+    }
+  });
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error.message}</p>;
+  var timeSlotData = data.timeSlots;
+
+  const getButtonStyle = (buttonId,remSlots) => {
+    if(remSlots===0){
+      return {disabled: true};
+    }
+    return desTime === buttonId ? {variant: 'filled'} : {variant: 'outline'};
+  };
+
 
   const closeOrderModal = () => {
     router.push("/student");
   };
-  let seasonsList = [];
 
-  function roer(subR) {
-    seasonsList = [];
-    subR.forEach((season, index) => {
-      seasonsList.push(
-        <Center>
-          <div>{season}</div>
-        </Center>
-      );
-      if (index < subR.length - 1) {
-        seasonsList.push(<Space h="sm" />);
+  const buttons = timeSlotData.map((d,index) => {
+    return(
+    <Button
+      value={d.time}
+      size="md"
+      classNames={{
+        root: styles.defaultRadius,
+      }}
+      onClick={(event) => {setdesTime(event.currentTarget.value)}}
+      {...getButtonStyle(d.time,d.slotsAva)}
+    >
+      {d.time.slice(0,-3)}
+      <br />
+      {d.slotsAva}
+    </Button>
+)});
+
+const morning = [buttons[0],buttons[1]];
+const evening = buttons.slice(2);
+
+
+const eventBookSlot = async () => {
+    try {
+      const {data} = await bookslot({
+        variables: { "slotBook": {
+          "bedSheetChangeReq": bedSheetCheck,
+          "time": desTime
+        }},
+        context: {
+          headers: {
+            authorization: token || "",
+          },
+        },
+      });
+      console.log("SLOT BOOKED -- SUCCESS", data);
+      if(data.already===true){
+        showSuccessNotification(
+          "Already Booked",
+          "You or Your roommate has already booked."
+        );
       }
-    });
-  }
+      else if(data.flag===true){
+        showSuccessNotification(
+          "Slot Booked",
+          "You have booked a slot for room cleaning."
+        );
+      }
+      router.refresh();
+      setBedSheetCheck(false);
+      setdesTime("");
+    } catch (error) {
+      console.log("SLOT BOOKING -- ERROR", error);
+      showErrorNotification("Failed to create user", error?.message);
+    }
+};
 
-  const rows = elements.map((element) => (
-    <Table.Tr key={element[0]}>
-      <Table.Td>
-        <Center>
-          <div>{element[0]}</div>
-        </Center>
-      </Table.Td>
-      <Table.Td>
-        <Center>
-          <div>{element[1]}</div>
-        </Center>
-      </Table.Td>
-      {roer(element[2])}
-      <Table.Td>{seasonsList}</Table.Td>
-      <Table.Td>
-        <Center>
-          <div>{element[3]}</div>
-        </Center>
-      </Table.Td>
-    </Table.Tr>
-  ));
-
-  const rows2 = elements2.map((element) => (
-    <Table.Tr key={element.timeSlot}>
-      <Table.Td>{element.timeSlot}</Table.Td>
-      <Table.Td>{element.BedSheetChange}</Table.Td>
-      <Table.Td>{element.name}</Table.Td>
-    </Table.Tr>
-  ));
   return (
     <main>
       <div className={styles.mainContainer}>
@@ -129,92 +189,29 @@ export default function Home() {
                     <Text className={styles.subheading}>Morning</Text>
                   </div>
                   <div className={styles.slottime}>
-                    <Button
-                      color="lime.4"
-                      variant="filled"
-                      // rightIcon={<Image src={FlowIcon} alt="Flow Icon" />}
-                      size="md"
-                      classNames={{
-                        root: styles.defaultRadius,
-                      }}
-                      // onClick={authenticateUser}
-                    >
-                      First
-                      <br />
-                      second
-                    </Button>
-                    <Button
-                      // rightIcon={<Image src={FlowIcon} alt="Flow Icon" />}
-                      size="md"
-                      classNames={{
-                        root: styles.defaultRadius,
-                      }}
-                      // onClick={authenticateUser}
-                    >
-                      First
-                      <br />
-                      second
-                    </Button>
+                    {morning}
                   </div>
 
                   <div className={styles.subheading}>
                     <Text className={styles.subheading}>Evening</Text>
                   </div>
                   <div className={styles.slottime}>
-                    <Button
-                      // rightIcon={<Image src={FlowIcon} alt="Flow Icon" />}
-                      size="md"
-                      classNames={{
-                        root: styles.defaultRadius,
-                      }}
-                      // onClick={authenticateUser}
-                    >
-                      First
-                      <br />
-                      second
-                    </Button>
-                    <Button
-                      // rightIcon={<Image src={FlowIcon} alt="Flow Icon" />}
-                      size="md"
-                      classNames={{
-                        root: styles.defaultRadius,
-                      }}
-                      // onClick={authenticateUser}
-                    >
-                      First
-                      <br />
-                      second
-                    </Button>
-                    <Button
-                      // rightIcon={<Image src={FlowIcon} alt="Flow Icon" />}
-                      size="md"
-                      classNames={{
-                        root: styles.defaultRadius,
-                      }}
-                      // onClick={authenticateUser}
-                    >
-                      First
-                      <br />
-                      second
-                    </Button>
+                  {evening}
                   </div>
                 </div>
                 <div className={styles.bottom}>
                   <div className={styles.bedsheetChange}>
-                    <Checkbox defaultChecked label="Change Bed-Sheet" />
+                    <Checkbox checked={bedSheetCheck} onChange={(event) => setBedSheetCheck(event.currentTarget.checked)} label="Change Bed-Sheet" />
                   </div>
                   <div className={styles.request}>
                     <Button
-                      // rightIcon={<Image src={FlowIcon} alt="Flow Icon" />}
                       size="md"
                       classNames={{
                         root: styles.defaultRadius,
                       }}
-                      // onClick={authenticateUser}
+                      onClick={eventBookSlot}
                     >
-                      First
-                      <br />
-                      second
+                      Request
                     </Button>
                   </div>
                 </div>
@@ -236,49 +233,11 @@ export default function Home() {
                 data={['React', 'Angular', 'Vue', 'Svelte']}
               />
               </div>
-
-              {/* <div className={styles.headingText2}>
-                <Text ta="center" className={styles.headingText}>
-                  Place Preference
-                </Text>
-              </div> */}
-
-              {/* <div className={styles.form2}>
-                <div className={styles.form2Input}>
-                  <Text>Lunch</Text>
-                  <Radio.Group
-                    name="lunchPlace"
-                    label="Lunch"
-                    withAsterisk
-                  >
-                    <Group mt="xs">
-                      <Radio value="uc" label="UC Cafeteria" />
-                      <Radio value="mess" label="Hostel Mess" />
-                    </Group>
-                  </Radio.Group>
-                  <Radio.Group
-                    name="teaPlace"
-                    label="Tea"
-                    withAsterisk
-                  >
-                    <Group mt="xs">
-                      <Radio value="uc" label="UC Cafeteria" />
-                      <Radio value="mess" label="Hostel Mess" />
-                    </Group>
-                  </Radio.Group>
-                </div>
-                <Button
-                  // rightIcon={<Image src={FlowIcon} alt="Flow Icon" />}
-                  size="md"
-                  classNames={{
-                    root: styles.defaultRadius,
-                  }}
-                  // onClick={authenticateUser}
-                >
-                  Confirm
-                </Button>
-              </div> */}
             </div>
+
+
+
+
             <div className={styles.rightSubContainer1}>
 
               <div className={styles.headingText2}>
@@ -321,35 +280,6 @@ export default function Home() {
                 >
                   Confirm
                 </Button>
-              
-              {/* <div className={styles.headingText2}>
-                <Text ta="center" className={styles.headingText}>
-                  Laundry Booking
-                </Text>
-              </div>
-              <div className={styles.laundryBooking}>
-              <Select
-                label="Select slot"
-                placeholder="Select Timing"
-                data={['React', 'Angular', 'Vue', 'Svelte']}
-              /> */}
-                {/* <Table
-                  stickyHeader
-                  stickyHeaderOffset={0}
-                  horizontalSpacing="xl"
-                  highlightOnHover
-                  withTableBorder
-                  withColumnBorders
-                >
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th>Time Slot</Table.Th>
-                      <Table.Th>Bed-Sheet Change</Table.Th>
-                      <Table.Th>Name</Table.Th>
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>{rows2}</Table.Tbody>
-                </Table> */}
               </div>
             </div>
           </div>
