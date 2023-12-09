@@ -2,6 +2,7 @@ const { GraphQLError } = require("graphql");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const models = require("../models");
+const moment = require('moment');
 
 
 
@@ -21,6 +22,7 @@ const resolvers = {
         console.log('User is created');
 
         if(user.position === "Student"){
+          
           const student = await models.student.create({ studentId: id, username: user.username, roomNo: 1, name: name }).catch(function (err) {
             throw new GraphQLError("Student couldn't be saved to the database", {
               extensions: {
@@ -121,23 +123,41 @@ const resolvers = {
         });
       }
     },
-    changePwd: async (_, {changePwd: {username, password}}) => {
-      const user = await models.user.update({password: password},{where: {username: username}}).catch(function (err){
-        console.log(err);
-        throw new GraphQLError("Error in changing the password.", {
+    changePwd: async (_, { changePwd: { username, oldPassword, newPassword, confirmPassword } }) => {
+      const user = await models.user.findOne({ where: { username: username, password: oldPassword } });
+      if (!user) {
+        throw new GraphQLError("Old password is incorrect", {
           extensions: {
-            code: "Password_Not_Changed",
+            code: "OLD_PASSWORD_INCORRECT",
           },
         });
-      });
-
+      }
+      if (!newPassword || newPassword.trim() === "") {
+        throw new GraphQLError("New password cannot be empty", {
+          extensions: {
+            code: "EMPTY_NEW_PASSWORD",
+          },
+        });
+      }   
+      if (newPassword !== confirmPassword) {
+        throw new GraphQLError("New password and confirmation password do not match", {
+          extensions: {
+            code: "PASSWORD_CONFIRMATION_MISMATCH",
+          },
+        });
+      }
+    
       try {
-        const userData = await resolvers.Mutation.login(_, { loginInput: { username: username, password: password } });
+        await models.user.update({ password: newPassword }, { where: { username: username } });
+            const userData = await resolvers.Mutation.login(_, {
+          loginInput: { username: username, password: newPassword },
+        });
+    
         return userData;
       } catch (error) {
-        throw new GraphQLError("Failed to call Mutation", {
+        throw new GraphQLError("Error in changing the password", {
           extensions: {
-            code: "CALL_ERROR",
+            code: "PASSWORD_NOT_CHANGED",
           },
         });
       }
@@ -182,8 +202,61 @@ const resolvers = {
           });
         }
       }
-    }
+    },
+   
+
+    mealUpdate: async (_, { mstudentId: { studentId }}) => {
+      try {
+        const currentTime = moment();
+        const student = await models.place.findOne({ where: { studentId: studentId }});
+        if (!student) {
+          return{
+            already: true,
+            flas:false,
+            message: "User already had meal",
+          };
+          
+        }
+    
+        const isLunchTime = currentTime.isBetween(moment('12:00', 'HH:mm'), moment('14:00', 'HH:mm'));
+        const isTeaTime = currentTime.isBetween(moment('16:00', 'HH:mm'), moment('19:00', 'HH:mm'));
+        const updatedMealDetails = await models.place.update({
+            lunchPlace: isLunchTime ? 'done' : student.lunchPlace,
+            teaPlace: isTeaTime ? 'done' : student.teaPlace,
+          },
+          { where: { studentId } }
+        );
+    
+        if (updatedMealDetails) {
+          return {
+            flag: true,
+            already:false,
+            message: "Meal details updated successfully",
+            mealDetails: {
+              studentId,
+              lunchPlace: isLunchTime ? 'done' : student.lunchPlace,
+              teaPlace: isTeaTime ? 'done' : student.teaPlace,
+            },
+          };
+        } else {
+          throw new GraphQLError("Error updating meal details", {
+            extensions: {
+              code: "UPDATE_ERROR",
+            },
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        throw new GraphQLError("Error updating meal details", {
+          extensions: {
+            code: "UPDATE_ERROR",
+          },
+        });
+      }
+    },
   },
+
+
   Query:{
     allUser: async (_) => {
       try {
@@ -249,6 +322,30 @@ const resolvers = {
         });
       }
     },
+    
+
+    placecount: async (_) => {
+      try {
+        const hostelMessLunchCount = await models.place.count({ where: { lunchPlace: 'Hostel Mess' } });
+        const collegeLunchCount = await models.place.count({ where: { lunchPlace: 'UC Cafeteria' } });
+        const hostelMessTeaCount = await models.place.count({ where: { teaPlace: 'Hostel Mess' } });
+        const collegeTeaCount = await models.place.count({ where: { teaPlace: 'UC Cafeteria' } });
+        return {
+          hostelMessLunchCount: hostelMessLunchCount,
+          collegeLunchCount: collegeLunchCount,
+          hostelMessTeaCount: hostelMessTeaCount,
+          collegeTeaCount: collegeTeaCount,
+        };
+      } catch (err) {
+        throw new GraphQLError("Error fetching place counts", {
+          extensions: {
+            code: "FETCH_ERROR",
+          },
+        });
+      }
+    },
+
+
   }
 };
 

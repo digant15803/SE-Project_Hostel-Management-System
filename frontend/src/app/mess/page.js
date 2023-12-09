@@ -3,8 +3,21 @@ import { useRouter } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
 import Navbar from "@/components/navbar/Navbar"
 import {Text, Table, TableData, TextInput, Button} from "@mantine/core"
-
+import { gql, useQuery } from "@apollo/client";
 import styles from "@/app/mess/page.module.css"
+import { useState, useEffect } from "react";
+
+
+const PLACECOUNTDETAILS = gql`
+  query Placecount {
+    placecount {
+      collegeLunchCount
+      collegeTeaCount
+      hostelMessLunchCount
+      hostelMessTeaCount
+    }
+  }
+`;
 
 const elements = [
   { position: 6, mass: 12.011, symbol: 'C', name: 'Carbon' },
@@ -14,40 +27,42 @@ const elements = [
   { position: 58, mass: 140.12, symbol: 'Ce', name: 'Cerium' },
 ];
 
-const elements2 = [
-  { place: "UC Cafeteria", lunch: 120, tea: 50 },
-  { place: "Hostel", lunch: 50, tea: 120 },
-];
-
 
 
 export default function Home() {
   const router = useRouter();
-  var token;
-  if (typeof window !== 'undefined') {
-    token = localStorage.getItem("token");
-    if(token===null){
-      router.push("/");
-    }
-    else{
-      const info = jwtDecode(token);
-      if(info.position==="Student"){
-        router.push("/student");
-      }
-      else if(info.position==="Mess"){
-        router.push("/mess");
-      }
-      else if(info.position==="House keeping"){
-        router.push("/housekeeping");
-      }
-      else if(info.position==="admin"){
-        router.push("/admin");
-      }
-      else{
-        router.push("/");
+
+  const [token, setToken] = useState(null);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedToken = localStorage.getItem("token");
+      if (storedToken != null) {
+        setToken(storedToken);
       }
     }
-  }
+  }, []);
+
+
+  useEffect(() => {
+    if (token !== null) {
+      try {
+        const info = jwtDecode(token);
+        if (info.position === "Student") {
+          router.push("/student");
+        } else if (info.position === "Mess") {
+          router.push("/mess");
+        } else if (info.position === "House keeping") {
+          router.push("/housekeeping");
+        } else if (info.position === "admin") {
+          router.push("/admin");
+        }
+      } catch (error) {
+        console.error("Error decoding token:", error);
+        // router.push("/");
+      }
+    }
+  }, [token]);
+
   const rows = elements.map((element) => (
     <Table.Tr key={element.name}>
       <Table.Td>{element.position}</Table.Td>
@@ -57,6 +72,28 @@ export default function Home() {
     </Table.Tr>
   ));
 
+  
+  
+  const { loading, error, data } = useQuery(PLACECOUNTDETAILS)
+  const [placeCount, setplaceCount] = useState([])
+  useEffect(() => {
+    if (data) {
+      setplaceCount(data.placecount);
+    }
+  }, [data]);
+
+  const elements2 = [
+    {
+      place: "UC Cafeteria",
+      lunch: placeCount.collegeLunchCount,
+      tea: placeCount.collegeTeaCount,
+    },
+    {
+      place: "Hostel",
+      lunch: placeCount.hostelMessLunchCount,
+      tea: placeCount.hostelMessTeaCount,
+    },
+  ];
   const rows2 = elements2.map((element) => (
     <Table.Tr key={element.place}>
       <Table.Td>{element.place}</Table.Td>
@@ -64,6 +101,8 @@ export default function Home() {
       <Table.Td>{element.tea}</Table.Td>
     </Table.Tr>
   ));
+
+
     return (
       <main>
         <div className={styles.mainContainer}>

@@ -83,6 +83,7 @@ export default function Home() {
       }
     }
   }
+  console.log(TIMESLOTDETAILS);
   const { loading, error, data } = useQuery(TIMESLOTDETAILS,{
     context: {
       headers: {
@@ -93,6 +94,7 @@ export default function Home() {
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
   var timeSlotData = data.timeSlots;
+  console.log(timeSlotData);
 
   const getButtonStyle = (buttonId,remSlots) => {
     if(remSlots===0){

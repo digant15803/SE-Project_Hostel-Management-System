@@ -20,7 +20,7 @@ const server = new ApolloServer({
 models.sequelize.authenticate().then(() => {
   console.log('Connection has been established successfully.');
   return startStandaloneServer(server, {
-      listen: { port: 8000 },
+      listen: { port: 8000},
       context: context,
   });
 }).then((server) => {

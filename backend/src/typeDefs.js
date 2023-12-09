@@ -1,6 +1,5 @@
 const { gql } = require("graphql-tag");
 
-// need to change by own schema
 module.exports = gql`
   type User{
     username: String
@@ -26,7 +25,9 @@ module.exports = gql`
   }
   input changePwd {
     username: String
-    password: String
+    oldPassword: String
+    newPassword: String
+    confirmPassword: String
   }
   type Token {
     token: String
@@ -45,22 +46,39 @@ module.exports = gql`
     time: String
     bedSheetChangeReq: Boolean
   }
+  input mstudentId{
+    studentId: String
+  }
+
   type Response{
     already: Boolean
     flag: Boolean
   }
-
+  type PlaceCount {
+    hostelMessLunchCount: Int
+    collegeLunchCount: Int
+    hostelMessTeaCount: Int
+    collegeTeaCount: Int
+  }
+  type place {
+    studentId: String
+    lunchPlace: String
+    teaPlace: String
+  }
 
   type Query{
     allUser: [User]
     timeSlots: [timeSlot]
     slotAvailable(slotCheck: slotCheck): Available
+    placecount: PlaceCount
   }
+
   type Mutation {
     signup(signupInput: signupInput): signUp
     login(loginInput: loginInput): Token
     changePwd(changePwd: changePwd): Token
     rcSlotBooking(slotBook: slotBook): Response
+    mealUpdate(mstudentId: mstudentId): Response
   }
 
 `;

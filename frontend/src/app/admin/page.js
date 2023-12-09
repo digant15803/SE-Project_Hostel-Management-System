@@ -28,6 +28,8 @@ const elements = [
     // [58, 140.12, 'Ce', 'Cerium'],
   ];
 
+
+
 const elements2 = [
   { place: "UC Cafeteria", lunch: 120, tea: 50 },
   { place: "Hostel", lunch: 50, tea: 120 },

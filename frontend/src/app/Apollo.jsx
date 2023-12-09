@@ -21,3 +21,10 @@ export default function Apollo({children}){
         </ApolloProvider>
     )
 }
+// const httpLink = createHttpLink({
+//     uri: process.env.NEXT_PUBLIC_BACKEND_URI,
+//   });
+//   const client = new ApolloClient({
+//     link: httpLink,
+//     cache: new InMemoryCache(),
+//   });
