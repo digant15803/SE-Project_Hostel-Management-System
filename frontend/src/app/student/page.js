@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from "next/image";
 import { jwtDecode } from "jwt-decode";
 import Navbar from "@/components/navbar/Navbar";
@@ -21,7 +21,8 @@ import {
   Select,
   Radio,
   Group, 
-  Modal
+  Modal,
+  LoadingOverlay
 } from "@mantine/core";
 import {
   showSuccessNotification,
@@ -58,32 +59,32 @@ export default function Home() {
   const [desTime, setdesTime] = useState('');
   const [bookslot] = useMutation(BOOKSLOT);
   const [bedSheetCheck, setBedSheetCheck] = useState(false);
-  var token;
-  if (typeof window !== 'undefined') {
-    token = localStorage.getItem("token");
-    if(token===null){
-      router.push("/");
+  const [timeSlotData, setTimeSlotData] = useState([]);
+
+  const check = typeof window !== "undefined" && window.localStorage;
+  const token = check ? localStorage.getItem("token") : "";
+
+
+  useEffect(() => {
+    if (token !== null) {
+      try {
+        const info = jwtDecode(token);
+        if (info.position === "Student") {
+          router.push("/student");
+        } else if (info.position === "Mess") {
+          router.push("/mess");
+        } else if (info.position === "House keeping") {
+          router.push("/housekeeping");
+        } else if (info.position === "admin") {
+          router.push("/admin");
+        }
+      } catch (error) {
+        console.error("Error decoding token:", error);
+        // router.push("/");
+      }
     }
-    else{
-      const info = jwtDecode(token);
-      if(info.position==="Student"){
-        router.push("/student");
-      }
-      else if(info.position==="Mess"){
-        router.push("/mess");
-      }
-      else if(info.position==="House keeping"){
-        router.push("/housekeeping");
-      }
-      else if(info.position==="admin"){
-        router.push("/admin");
-      }
-      else{
-        router.push("/");
-      }
-    }
-  }
-  console.log(TIMESLOTDETAILS);
+  }, [token]);
+
   const { loading, error, data } = useQuery(TIMESLOTDETAILS,{
     context: {
       headers: {
@@ -91,10 +92,34 @@ export default function Home() {
       },
     }
   });
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error.message}</p>;
-  var timeSlotData = data.timeSlots;
-  console.log(timeSlotData);
+  const [morning, setMorningButtons] = useState();
+  const [evening, setEveningButtons] = useState();
+  useEffect(() => {
+    if(data){
+      const timeSlotData = data.timeSlots;
+      const buttons = timeSlotData.map((d,index) => {
+        return(
+        <Button
+          value={d.time}
+          size="md"
+          classNames={{
+            root: styles.defaultRadius,
+          }}
+          onClick={(event) => {setdesTime(event.currentTarget.value)}}
+          {...getButtonStyle(d.time,d.slotsAva)}
+        >
+          {d.time.slice(0,-3)}
+          <br />
+          {d.slotsAva}
+        </Button>
+      )});
+      const morning = [buttons[0],buttons[1]];
+      const evening = buttons.slice(2);
+      setMorningButtons(morning);
+      setEveningButtons(evening);
+    }
+  }, [data]);
+
 
   const getButtonStyle = (buttonId,remSlots) => {
     if(remSlots===0){
@@ -107,27 +132,6 @@ export default function Home() {
   const closeOrderModal = () => {
     router.push("/student");
   };
-
-  const buttons = timeSlotData.map((d,index) => {
-    return(
-    <Button
-      value={d.time}
-      size="md"
-      classNames={{
-        root: styles.defaultRadius,
-      }}
-      onClick={(event) => {setdesTime(event.currentTarget.value)}}
-      {...getButtonStyle(d.time,d.slotsAva)}
-    >
-      {d.time.slice(0,-3)}
-      <br />
-      {d.slotsAva}
-    </Button>
-)});
-
-const morning = [buttons[0],buttons[1]];
-const evening = buttons.slice(2);
-
 
 const eventBookSlot = async () => {
     try {
@@ -166,6 +170,7 @@ const eventBookSlot = async () => {
 
   return (
     <main>
+      <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: "sm", blur: 4 }} />
       <div className={styles.mainContainer}>
         <Navbar userT="student" />
 

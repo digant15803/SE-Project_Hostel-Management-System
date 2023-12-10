@@ -1,34 +1,54 @@
 "use client"
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
-import Navbar from "@/components/navbar/Navbar"
-import {Text, Table, TextInput, Button, Space, Center, Modal} from "@mantine/core"
+import Navbar from "@/components/navbar/Navbar";
+import {Text, Table, TextInput, Button, Space, Center, Modal, UnstyledButton, LoadingOverlay } from "@mantine/core";
+import { IconTrash } from '@tabler/icons-react';
+import { gql, useMutation, useQuery } from "@apollo/client";
 
 import styles from "@/app/admin/page.module.css"
 import { ReactElement } from "react";
 
 import RegComp from "@/components/registration/RegComp";
 
-const elements = [
-    [6, 12.011, ['C','N'], 'Carbon'],
-    [7, 12.011, ['C','N'], 'Carbon'],
-    [8, 12.011, ['C','N'], 'Carbon'],
-    [9, 12.011, ['C','N'], 'Carbon'],
-    [10, 12.011, ['C','N'], 'Carbon'],
-    [11, 12.011, ['C','N'], 'Carbon'],
-    [12, 12.011, ['C','N'], 'Carbon'],
-    [13, 12.011, ['C','N'], 'Carbon'],
-    [14, 12.011, ['C','N'], 'Carbon'],
-    [15, 12.011, ['C','N'], 'Carbon'],
-    [16, 12.011, ['C','N'], 'Carbon'],
-    [17, 12.011, ['C','N'], 'Carbon'],
-    // [7, 14.007, 'N', 'Nitrogen'],
-    // [39, 88.906, 'Y', 'Yttrium'],
-    // [56, 137.33, 'Ba', 'Barium'],
-    // [58, 140.12, 'Ce', 'Cerium'],
-  ];
+const TIMESLOTDETAILS = gql`
+  query timeSlotDetails {
+    timeSlots {
+      slotsAva
+      time
+    }
+  }
+`;
 
+// const elements = [
+//     [6, 12.011, ['C','N'], 'Carbon'],
+//     [7, 12.011, ['C','N'], 'Carbon'],
+//     [8, 12.011, ['C','N'], 'Carbon'],
+//     [9, 12.011, ['C','N'], 'Carbon'],
+//     [10, 12.011, ['C','N'], 'Carbon'],
+//     [11, 12.011, ['C','N'], 'Carbon'],
+//     [12, 12.011, ['C','N'], 'Carbon'],
+//     [13, 12.011, ['C','N'], 'Carbon'],
+//     [14, 12.011, ['C','N'], 'Carbon'],
+//     [15, 12.011, ['C','N'], 'Carbon'],
+//     [16, 12.011, ['C','N'], 'Carbon'],
+//     [17, 12.011, ['C','N'], 'Carbon'],
+//     // [7, 14.007, 'N', 'Nitrogen'],
+//     // [39, 88.906, 'Y', 'Yttrium'],
+//     // [56, 137.33, 'Ba', 'Barium'],
+//     // [58, 140.12, 'Ce', 'Cerium'],
+//   ];
 
+// const elements = [
+//   {time: "11:00", slotsAva: 3},
+//   {time: "11:30", slotsAva: 3},
+//   {time: "12:00", slotsAva: 3},
+//   {time: "12:30", slotsAva: 3},
+//   {time: "13:00", slotsAva: 3},
+//   {time: "13:30", slotsAva: 3},
+//   {time: "14:00", slotsAva: 3},
+// ];
 
 const elements2 = [
   { place: "UC Cafeteria", lunch: 120, tea: 50 },
@@ -42,31 +62,53 @@ export default function Home() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  var token;
-  if (typeof window !== 'undefined') {
-    token = localStorage.getItem("token");
-    if(token===null){
-      router.push("/");
+  // const [token, setToken] = useState("");
+  const [elements, setElements] = useState();
+  const [loadingData, setLoadingData] = useState(false);
+  const check = typeof window !== "undefined" && window.localStorage;
+  const token = check ? localStorage.getItem("token") : "";
+
+
+  useEffect(() => {
+    if (token !== null) {
+      try {
+        const info = jwtDecode(token);
+        if (info.position === "Student") {
+          router.push("/student");
+        } else if (info.position === "Mess") {
+          router.push("/mess");
+        } else if (info.position === "House keeping") {
+          router.push("/housekeeping");
+        } else if (info.position === "admin") {
+          router.push("/admin");
+        }
+      } catch (error) {
+        console.error("Error decoding token:", error);
+        // router.push("/");
+      }
     }
-    else{
-      const info = jwtDecode(token);
-      if(info.position==="Student"){
-        router.push("/student");
-      }
-      else if(info.position==="Mess"){
-        router.push("/mess");
-      }
-      else if(info.position==="House keeping"){
-        router.push("/housekeeping");
-      }
-      else if(info.position==="admin"){
-        router.push("/admin");
-      }
-      else{
-        router.push("/");
-      }
+  }, [token]);
+
+  const { loading, error, data } = useQuery(TIMESLOTDETAILS,{
+    context: {
+      headers: {
+        authorization: token || "",
+      },
     }
-  }
+  });
+
+
+  
+  useEffect(() => {
+    if(data){
+      console.log(data);
+      setElements(data.timeSlots);
+      setLoadingData(true);
+    }
+  }, [data]);
+  
+  
+  
   const closeRegModal = () => {
     router.push("/admin");
   };
@@ -82,16 +124,26 @@ export default function Home() {
       }
     });
   }
-  
-  const rows = elements.map((element) => (
-    <Table.Tr key={element[0]}>
-      <Table.Td><Center><div>{element[0]}</div></Center></Table.Td>
-      <Table.Td><Center><div>{element[1]}</div></Center></Table.Td>
-        {roer(element[2])}
-      <Table.Td>{seasonsList}</Table.Td>
-      <Table.Td><Center><div>{element[3]}</div></Center></Table.Td>
+  function removeTime(time){
+    console.log(time);
+  }
+  const rows = elements && elements.map((element) => (
+    <Table.Tr key={element.time}>
+      <Table.Td><Center><div>{element.time}</div></Center></Table.Td>
+      <Table.Td><Center><div>{element.slotsAva}</div></Center></Table.Td>
+      <Table.Td> <UnstyledButton  value={element.time} onClick={(event) => removeTime(event.currentTarget.value)}><IconTrash /></UnstyledButton ></Table.Td>
     </Table.Tr>
   ));
+  
+  // const rows = elements.map((element) => (
+  //   <Table.Tr key={element[0]}>
+  //     <Table.Td><Center><div>{element[0]}</div></Center></Table.Td>
+  //     <Table.Td><Center><div>{element[1]}</div></Center></Table.Td>
+  //       {roer(element[2])}
+  //     <Table.Td>{seasonsList}</Table.Td>
+  //     <Table.Td><Center><div>{element[3]}</div></Center></Table.Td>
+  //   </Table.Tr>
+  // ));
 
   const rows2 = elements2.map((element) => (
     <Table.Tr key={element.place}>
@@ -102,7 +154,8 @@ export default function Home() {
   ));
     return (
       <main>
-        <div className={styles.mainContainer}>
+        <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: "sm", blur: 4 }} />
+        {loadingData && <div className={styles.mainContainer}>
             <Navbar userT="admin"/>
 
             <div className={styles.content}>
@@ -114,13 +167,23 @@ export default function Home() {
                 </div>
                 <div className={styles.headingContent}>
                   <div className={styles.table}>
-                    <Table stickyHeader stickyHeaderOffset={0} horizontalSpacing="xl" highlightOnHover withTableBorder withColumnBorders>
+                    {/* <Table stickyHeader stickyHeaderOffset={0} horizontalSpacing="xl" highlightOnHover withTableBorder withColumnBorders>
                       <Table.Thead>
                         <Table.Tr>
                           <Table.Th>Element position</Table.Th>
                           <Table.Th>Element name</Table.Th>
                           <Table.Th>Symbol</Table.Th>
                           <Table.Th>Atomic mass</Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>{rows}</Table.Tbody>
+                    </Table> */}
+                    <Table stickyHeader stickyHeaderOffset={0} horizontalSpacing="xl" highlightOnHover withTableBorder withColumnBorders>
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th>Time</Table.Th>
+                          <Table.Th>Slots Available</Table.Th>
+                          <Table.Th></Table.Th>
                         </Table.Tr>
                       </Table.Thead>
                       <Table.Tbody>{rows}</Table.Tbody>
@@ -180,6 +243,7 @@ export default function Home() {
               </div>
             </div>
         </div>
+        }
 
         <Modal
           opened={searchParams.get('authModal') === "registration"}
@@ -189,7 +253,6 @@ export default function Home() {
         >
           <RegComp/>
         </Modal>
-        
       </main>
     )
   }

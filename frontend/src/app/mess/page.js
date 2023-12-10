@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
 import Navbar from "@/components/navbar/Navbar"
-import {Text, Table, TableData, TextInput, Button} from "@mantine/core"
+import {Text, Table, TableData, TextInput, Button, LoadingOverlay} from "@mantine/core"
 import { gql, useQuery } from "@apollo/client";
 import styles from "@/app/mess/page.module.css"
 import { useState, useEffect } from "react";
@@ -31,17 +31,9 @@ const elements = [
 
 export default function Home() {
   const router = useRouter();
-
-  const [token, setToken] = useState(null);
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedToken = localStorage.getItem("token");
-      if (storedToken != null) {
-        setToken(storedToken);
-      }
-    }
-  }, []);
-
+  const [placeCount, setplaceCount] = useState([]);
+  const check = typeof window !== "undefined" && window.localStorage;
+  const token = check ? localStorage.getItem("token") : "";
 
   useEffect(() => {
     if (token !== null) {
@@ -63,6 +55,19 @@ export default function Home() {
     }
   }, [token]);
 
+  const { loading, error, data } = useQuery(PLACECOUNTDETAILS,{
+    context: {
+      headers: {
+        authorization: token || "",
+      },
+    }
+  });
+  useEffect(() => {
+    if(data){
+      setplaceCount(data.placecount);
+    }
+  }, [data]);
+
   const rows = elements.map((element) => (
     <Table.Tr key={element.name}>
       <Table.Td>{element.position}</Table.Td>
@@ -71,16 +76,7 @@ export default function Home() {
       <Table.Td>{element.mass}</Table.Td>
     </Table.Tr>
   ));
-
   
-  
-  const { loading, error, data } = useQuery(PLACECOUNTDETAILS)
-  const [placeCount, setplaceCount] = useState([])
-  useEffect(() => {
-    if (data) {
-      setplaceCount(data.placecount);
-    }
-  }, [data]);
 
   const elements2 = [
     {
@@ -105,6 +101,7 @@ export default function Home() {
 
     return (
       <main>
+        <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: "sm", blur: 4 }} />
         <div className={styles.mainContainer}>
             <Navbar userT="mess"/>
 

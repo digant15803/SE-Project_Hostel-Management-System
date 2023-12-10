@@ -70,6 +70,7 @@ function RegComp() {
       console.log("AUTHENTICATE -- ERROR", error);
       showErrorNotification("Failed to create user", error?.message);
     }
+    form.reset();
   };
 
   return (

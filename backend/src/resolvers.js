@@ -3,8 +3,9 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const models = require("../models");
 const moment = require('moment');
+const { createHmac } = require("crypto");
 
-
+const secret = 'abcdefg';
 
 const resolvers = {
   Mutation: {
@@ -18,18 +19,44 @@ const resolvers = {
         });
 
       try {
-        const user = await models.user.create({ username: username, password: null, position: position });
+        console.log(id);
+        const pwd = JSON.stringify(createHmac('sha256', secret).update(id).digest('hex')).slice(1,-1);
+        console.log(pwd);
+        const user = await models.user.create({ username: username, password: pwd, position: position });
         console.log('User is created');
 
         if(user.position === "Student"){
-          
-          const student = await models.student.create({ studentId: id, username: user.username, roomNo: 1, name: name }).catch(function (err) {
+          const student = await models.student.create({ studentId: id, username: user.username, roomNo: null, name: name }).catch(function (err) {
             throw new GraphQLError("Student couldn't be saved to the database", {
               extensions: {
                 code: "Student_NOT_SAVED",
               },
             });
           });
+
+          const roomDetails = await resolvers.Query.roomDetails();
+          let roomN;
+          for (let i = 0; i < roomDetails.length; i++) {
+            if(roomDetails[i].studentId1 === null){
+              roomN = roomDetails[i].roomNo;
+              const addStudentDetail = await models.roomdetails.update({ studentId1: id }, { where: { roomNo: roomN } });
+              break;
+            }
+            else if(roomDetails[i].studentId2 === null){
+              roomN = roomDetails[i].roomNo;
+              console.log(roomN);
+              const addStudentDetail = await models.roomdetails.update({ studentId2: id }, { where: { roomNo: roomN } });
+              break;
+            }
+            else if(roomDetails[i].studentId3 === null){
+              roomN = roomDetails[i].roomNo;
+              const addStudentDetail = await models.roomdetails.update({ studentId3: id }, { where: { roomNo: roomN } });
+              break;
+            }
+          }
+          const updateStudentDetail = await models.student.update({ roomNo: roomN }, { where: { studentId: id } });
+          
+          
         }
         else{
           const manager = await models.manager.create({ managerId: id, username: user.username, name: name }).catch(function (err) {
@@ -150,8 +177,8 @@ const resolvers = {
       try {
         await models.user.update({ password: newPassword }, { where: { username: username } });
             const userData = await resolvers.Mutation.login(_, {
-          loginInput: { username: username, password: newPassword },
-        });
+              loginInput: { username: username, password: newPassword },
+            });
     
         return userData;
       } catch (error) {
@@ -264,6 +291,18 @@ const resolvers = {
         return allUser;
       } catch (err) {
         throw new GraphQLError("Error fetching items", {
+          extensions: {
+            code: "FETCH_ERROR",
+          },
+        });
+      }
+    },
+    roomDetails: async (_) => {
+      try {
+        const allUser = await models.roomdetails.findAll({raw: true,});
+        return allUser;
+      } catch (err) {
+        throw new GraphQLError("Error fetching room details", {
           extensions: {
             code: "FETCH_ERROR",
           },

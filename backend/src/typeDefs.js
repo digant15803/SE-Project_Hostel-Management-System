@@ -65,12 +65,19 @@ module.exports = gql`
     lunchPlace: String
     teaPlace: String
   }
+  type roomDetail{
+    roomNo: Int
+    studentId1: String
+    studentId2: String
+    studentId3: String
+  }
 
   type Query{
     allUser: [User]
     timeSlots: [timeSlot]
     slotAvailable(slotCheck: slotCheck): Available
     placecount: PlaceCount
+    roomDetails: [roomDetail]
   }
 
   type Mutation {

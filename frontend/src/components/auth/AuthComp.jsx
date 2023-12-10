@@ -63,18 +63,18 @@ function AuthComp() {
   const [login] = useMutation(Login);
   const [changepwd] = useMutation(ChangePwd);
   const [createPassword, setCreatePassword] = useState(false);
-  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  // const [showPasswordReset, setShowPasswordReset] = useState(false);
 
-  const handleResetPassword = async () => {
-    try {
+  // const handleResetPassword = async () => {
+  //   try {
       
-      setCreatePassword(false);
-      setShowPasswordReset(false);
-    } catch (error) {
-      console.log('RESET PASSWORD -- ERROR', error);
-      showErrorNotification('Failed to reset password', error?.message);
-    }
-  };
+  //     setCreatePassword(false);
+  //     setShowPasswordReset(false);
+  //   } catch (error) {
+  //     console.log('RESET PASSWORD -- ERROR', error);
+  //     showErrorNotification('Failed to reset password', error?.message);
+  //   }
+  // };
 
   const eventLogin = async () => {
     if (createPassword) {
@@ -87,8 +87,8 @@ function AuthComp() {
         });
         console.log("PASSWORD CREATED -- SUCCESS", data);
         showSuccessNotification(
-          "User Created",
-          "Password should be created by user."
+          "Password Created",
+          ""
         );
         const info = jwtDecode(data.changePwd.token);
         localStorage.setItem("token", data.changePwd.token);
@@ -111,7 +111,7 @@ function AuthComp() {
       } 
       catch (error) {
         console.log("PASSWORD CREATION -- ERROR", error);
-        showErrorNotification("Failed to create user", error?.message);
+        showErrorNotification("Failure", error?.message);
       }
     } else {
       try {
@@ -131,50 +131,53 @@ function AuthComp() {
         localStorage.setItem('token', data.login.token);
         if (info.username == null) {
           setCreatePassword(true);
-          setShowPasswordReset(false);
+          // setShowPasswordReset(false);
         } else {
           console.log(JSON.stringify(createHmac('sha256', secret).update("admin").digest('hex')).slice(1,-1));
-      try {
-        const {data} = await login({
-          variables: { "loginInput": {
-            "username": form.values.username,
-            "password": JSON.stringify(createHmac('sha256', secret).update(form.values.password).digest('hex')).slice(1,-1)
-          }},
-        });
-        console.log("AUTHENTICATE -- SUCCESS", data);
-        showSuccessNotification(
-          "User Created",
-          "Password should be created by user."
-        );
-        const info = jwtDecode(data.login.token);
-        console.log(data.login.token);
-        console.log(info);
-        localStorage.setItem("token", data.login.token);
-        if(info.username==null){
-          setCreatePassword(true);
-        }
-        else{
-          if(info.position==="Student"){
-            router.push("\student");
+          try {
+            const {data} = await login({
+              variables: { "loginInput": {
+                "username": form.values.username,
+                "password": JSON.stringify(createHmac('sha256', secret).update(form.values.password).digest('hex')).slice(1,-1)
+              }},
+            });
+            console.log("AUTHENTICATE -- SUCCESS", data);
+            showSuccessNotification(
+              "Logged in Succesfully",
+              ""
+            );
+            const info = jwtDecode(data.login.token);
+            console.log(data.login.token);
+            console.log(info);
+            localStorage.setItem("token", data.login.token);
+            if(info.username==null){
+              setCreatePassword(true);
+            }
+            else{
+              if(info.position==="Student"){
+                router.push("\student");
+              }
+              else if(info.position==="Mess"){
+                router.push("\mess");
+              }
+              else if(info.position==="House keeping"){
+                router.push("\housekeeping");
+              }
+              else{
+                router.push("\admin");
+              }
+            }
+          } catch (error) {
+            console.log("AUTHENTICATE -- ERROR", error);
+            showErrorNotification("Failure", error?.message);
+            
+
           }
-          else if(info.position==="Mess"){
-            router.push("\mess");
-          }
-          else if(info.position==="House keeping"){
-            router.push("\housekeeping");
-          }
-          else{
-            router.push("\admin");
-          }
-        }
-      } catch (error) {
-        console.log("AUTHENTICATE -- ERROR", error);
-        showErrorNotification("Failed to create user", error?.message);
-      }
         }
       } catch (error) {
         console.log('AUTHENTICATE -- ERROR', error);
-        showErrorNotification('Failed to create user', error?.message);
+        showErrorNotification('Failure', error?.message);
+        form.reset();
       }
 
     }
@@ -183,8 +186,7 @@ function AuthComp() {
 
   return (
     <div className={styles.container}>
-      {!showPasswordReset && (
-        <div>
+      <div>
       
       {createPassword ? (
         <Title order={4}>Create Password</Title>
@@ -226,9 +228,9 @@ function AuthComp() {
               )}
             </div>
     
-            <span className={styles.forgotPasswordButton}>
+            {/* <span className={styles.forgotPasswordButton}>
                    <a href="#" onClick={() => setShowPasswordReset(true)}>Set password</a>
-                </span>
+                </span> */}
             
             <Button
               fullWidth
@@ -258,14 +260,12 @@ function AuthComp() {
         </div>
       </div>
       </div>
-     
-      )}
-      {showPasswordReset && (
+      {/* {showPasswordReset && (
         <PasswordResetComp
         onClose={() => setShowPasswordReset(false)}
         onReset={handleResetPassword}
       />
-      )}
+      )} */}
       </div>
       
       

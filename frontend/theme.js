@@ -1,6 +1,6 @@
 'use client';
 
-import { createTheme, Button, Text, Title } from '@mantine/core';
+import { createTheme, Button, Text, Title, notifications } from '@mantine/core';
 
 import { Manrope } from "next/font/google";
 const manropeFont = Manrope({ subsets: ["latin"] });
@@ -41,5 +41,10 @@ export const theme = createTheme({
         fw: "500",
       },
     }),
+    // notifications: {
+    //   position: 'fixed',
+    //   bottom: 16,
+    //   right: 16,
+    // },
   },
 });
