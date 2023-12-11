@@ -27,7 +27,6 @@ module.exports = gql`
     username: String
     oldPassword: String
     newPassword: String
-    confirmPassword: String
   }
   type Token {
     token: String
@@ -48,6 +47,17 @@ module.exports = gql`
   }
   input mstudentId{
     studentId: String
+  }
+  input updateplace{
+    studentId: String
+    lunchPlace: String
+    teaPlace: String
+  }
+  
+  type allStudents {
+    name: String
+    username: String
+    roomNo: Int
   }
 
   type Response{
@@ -72,12 +82,28 @@ module.exports = gql`
     studentId3: String
   }
 
+  type roomBookingDetails{
+    roomNo: Int
+    studentId: String
+    bedSheetChange:Boolean
+    time: String
+  }
+  type RoomCleaningDetails {
+    roomNo: Int
+    studentId: String
+    bedSheetChange: Boolean
+    time: String
+  }
+
   type Query{
     allUser: [User]
     timeSlots: [timeSlot]
     slotAvailable(slotCheck: slotCheck): Available
     placecount: PlaceCount
     roomDetails: [roomDetail]
+    allStudents: [allStudents]
+    roomBookingDetails: [roomBookingDetails]
+    studentRoomCleaningDetails: [RoomCleaningDetails]
   }
 
   type Mutation {
@@ -86,6 +112,7 @@ module.exports = gql`
     changePwd(changePwd: changePwd): Token
     rcSlotBooking(slotBook: slotBook): Response
     mealUpdate(mstudentId: mstudentId): Response
+    updatePlace(updateplace: updateplace): Response
   }
 
 `;

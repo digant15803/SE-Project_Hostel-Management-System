@@ -52,17 +52,60 @@ const BOOKSLOT = gql`
   }
 `;
 
+const UPDATEPLACE = gql`
+  mutation Mutation($updateplace: updateplace) {
+    updatePlace(updateplace: $updateplace) {
+      already
+      flag
+    }
+  }
+`;
+
 export default function Home() {
   const router = useRouter();
   const searchParams = useSearchParams();
-
+  const [lunchPlace, setLunchPlace] = useState('');
+  const [teaPlace, setTeaPlace] = useState('');
   const [desTime, setdesTime] = useState('');
   const [bookslot] = useMutation(BOOKSLOT);
   const [bedSheetCheck, setBedSheetCheck] = useState(false);
   const [timeSlotData, setTimeSlotData] = useState([]);
-
   const check = typeof window !== "undefined" && window.localStorage;
   const token = check ? localStorage.getItem("token") : "";
+  const [updatePlaceMutation] = useMutation(UPDATEPLACE);
+
+  const updatePlacePreferences = async () => {
+    try {
+      const info = jwtDecode(token);
+      console.log(info);
+      const studentId = info.id;
+      console.log(studentId);
+      const { data } = await updatePlaceMutation({
+        variables: {
+          updateplace: {
+            studentId: studentId, 
+            lunchPlace: lunchPlace,
+            teaPlace: teaPlace,
+          },
+        },
+        context: {
+          headers: {
+            authorization: token || "",
+          },
+        },
+      });
+
+      if (data.updatePlace.flag) {
+        showSuccessNotification("Place preferences updated successfully");
+      } else {
+        showErrorNotification("Failed to update place preferences");
+      }
+    } catch (error) {
+      console.error("Error updating place preferences:", error);
+      showErrorNotification("Failed to update place preferences", error?.message);
+    }
+  };
+
 
 
   useEffect(() => {
@@ -118,7 +161,7 @@ export default function Home() {
       setMorningButtons(morning);
       setEveningButtons(evening);
     }
-  }, [data]);
+  }, [data,desTime]);
 
 
   const getButtonStyle = (buttonId,remSlots) => {
@@ -133,40 +176,59 @@ export default function Home() {
     router.push("/student");
   };
 
-const eventBookSlot = async () => {
-    try {
-      const {data} = await bookslot({
-        variables: { "slotBook": {
-          "bedSheetChangeReq": bedSheetCheck,
-          "time": desTime
-        }},
-        context: {
-          headers: {
-            authorization: token || "",
+  const eventBookSlot = async () => {
+      try {
+        const {data} = await bookslot({
+          variables: { "slotBook": {
+            "bedSheetChangeReq": bedSheetCheck,
+            "time": desTime
+          }},
+          context: {
+            headers: {
+              authorization: token || "",
+            },
           },
-        },
-      });
-      console.log("SLOT BOOKED -- SUCCESS", data);
-      if(data.already===true){
-        showSuccessNotification(
-          "Already Booked",
-          "You or Your roommate has already booked."
-        );
+        });
+        console.log("SLOT BOOKED -- SUCCESS", data);
+        if(data.rcSlotBooking.already===true){
+          showSuccessNotification(
+            "Already Booked",
+            "You or Your roommate has already booked."
+          );
+        }
+        else if(data.rcSlotBooking.flag===true){
+          showSuccessNotification(
+            "Slot Booked",
+            "You have booked a slot for room cleaning."
+          );
+        }
+        router.refresh();
+        setBedSheetCheck(false);
+        setdesTime("");
+      } catch (error) {
+        console.log("SLOT BOOKING -- ERROR", error);
+        showErrorNotification("Failed to create user", error?.message);
       }
-      else if(data.flag===true){
-        showSuccessNotification(
-          "Slot Booked",
-          "You have booked a slot for room cleaning."
-        );
-      }
-      router.refresh();
-      setBedSheetCheck(false);
-      setdesTime("");
-    } catch (error) {
-      console.log("SLOT BOOKING -- ERROR", error);
-      showErrorNotification("Failed to create user", error?.message);
+  };
+  const isLunchDisabled = () => {
+    const cTime = new Date().getHours();
+    if(cTime>11 && cTime<23){
+      return true;
     }
-};
+    else{
+      return false;
+    }
+  };
+  
+  const isTeaDisabled = () => {
+    const cTime = new Date().getHours();
+    if(cTime>15 && cTime<23){
+      return true;
+    }
+    else{
+      return false;
+    }
+  };
 
   return (
     <main>
@@ -260,20 +322,24 @@ const eventBookSlot = async () => {
                     name="lunchPlace"
                     label="Lunch"
                     withAsterisk
+                    value={lunchPlace}
+                    onChange={(value) => setLunchPlace(value)}
                   >
                     <Group mt="xs">
-                      <Radio value="uc" label="UC Cafeteria" />
-                      <Radio value="mess" label="Hostel Mess" />
+                      <Radio value="UC Cafeteria" label="UC Cafeteria" disabled={isLunchDisabled()}/>
+                      <Radio value="Hostel Mess" label="Hostel Mess"  disabled={isLunchDisabled()}/>
                     </Group>
                   </Radio.Group>
                   <Radio.Group
                     name="teaPlace"
                     label="Tea"
                     withAsterisk
+                    value={teaPlace}
+                    onChange={(value) => setTeaPlace(value)}
                   >
                     <Group mt="xs">
-                      <Radio value="uc" label="UC Cafeteria" />
-                      <Radio value="mess" label="Hostel Mess" />
+                      <Radio value="UC Cafeteria" label="UC Cafeteria"   disabled={isTeaDisabled()}/>
+                      <Radio value="Hostel Mess" label="Hostel Mess" disabled={isTeaDisabled()}/>
                     </Group>
                   </Radio.Group>
                 </div>
@@ -283,7 +349,7 @@ const eventBookSlot = async () => {
                   classNames={{
                     root: styles.defaultRadius,
                   }}
-                  // onClick={authenticateUser}
+                  onClick={updatePlacePreferences}
                 >
                   Confirm
                 </Button>

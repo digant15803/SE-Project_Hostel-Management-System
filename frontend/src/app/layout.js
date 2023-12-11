@@ -35,6 +35,7 @@ export default function RootLayout({ children }) {
                   position: 'fixed',
                   bottom: 16,
                   right: 16,
+                  zIndex: 9999,
                 },
               }}/>
           </MantineProvider>

@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
 import Navbar from "@/components/navbar/Navbar";
+import { gql, useQuery } from "@apollo/client";
 import {Text, Table, TableData, TextInput, Button, Space, Center, LoadingOverlay} from "@mantine/core"
 
 import styles from "@/app/housekeeping/page.module.css";
@@ -16,11 +17,21 @@ const elements2 = [
   { place: "Hostel", lunch: 50, tea: 120 },
 ];
 
-
+const BOOKINGDETAILS = gql`
+  query RoomBookingDetails {
+    roomBookingDetails {
+      bedSheetChange
+      roomNo
+      studentId
+      time
+    }
+  }
+`;
   
 
 export default function Home() {
   const router = useRouter();
+  const [bookingDetails, setBookingDetails] = useState([]);
   const check = typeof window !== "undefined" && window.localStorage;
   const token = check ? localStorage.getItem("token") : "";
 
@@ -44,11 +55,38 @@ export default function Home() {
     }
   }, [token]);
 
-  const rows2 = elements2.map((element) => (
-    <Table.Tr key={element.place}>
-      <Table.Td>{element.place}</Table.Td>
-      <Table.Td>{element.lunch}</Table.Td>
-      <Table.Td>{element.tea}</Table.Td>
+  const { loading, error, data } = useQuery(BOOKINGDETAILS,{
+    context: {
+      headers: {
+        authorization: token || "",
+      },
+    }
+  });
+  useEffect(() => {
+    if(data){
+      console.log(data);
+      setBookingDetails(data.roomBookingDetails);
+    }
+  }, [data]);
+
+
+  const rows = bookingDetails.map((booking, index) => (
+    <Table.Tr key={index}>
+      <Table.Td><Center>
+          <div>{booking.time}</div>
+        </Center></Table.Td>
+      <Table.Td><Center>
+          <div>{booking.roomNo}</div>
+        </Center></Table.Td>
+        
+      <Table.Td><Center>
+          <div>{booking.bedSheetChange?"Yes":"No"}</div>
+        </Center></Table.Td>
+        <Table.Td><Center>
+          <div>{booking.studentId}</div>
+        </Center></Table.Td>
+      
+      
     </Table.Tr>
   ));
     return (
@@ -65,22 +103,24 @@ export default function Home() {
                 </div>
                 <div className={styles.subContainer}>
                   <div className={styles.table}>
-                      <Table stickyHeader stickyHeaderOffset={0} horizontalSpacing="xl" highlightOnHover withTableBorder withColumnBorders>
-                          <Table.Thead>
-                            <Table.Tr>
-                              <Table.Th></Table.Th>
-                              <Table.Th>Lunch</Table.Th>
-                              <Table.Th>Tea</Table.Th>
-                            </Table.Tr>
-                          </Table.Thead>
-                          <Table.Tbody>{rows2}</Table.Tbody>
-                        </Table>
+                   <Table stickyHeader stickyHeaderOffset={0} horizontalSpacing="xl" highlightOnHover withTableBorder withColumnBorders>
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th ta="center">Time</Table.Th>
+                          <Table.Th ta="center">Room No</Table.Th>
+                          <Table.Th ta="center">Bed Sheet Change</Table.Th>
+                          <Table.Th ta="center">Student ID</Table.Th>
+                          
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>{rows}</Table.Tbody>
+                    </Table> 
                     </div>
                   </div>
-              </div>
-            </div>
-        </div>
-        
+                </div>
+              
+            </div>    
+        </div> 
       </main>
     )
   }

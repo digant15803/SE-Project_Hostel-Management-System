@@ -150,30 +150,22 @@ const resolvers = {
         });
       }
     },
-    changePwd: async (_, { changePwd: { username, oldPassword, newPassword, confirmPassword } }) => {
-      const user = await models.user.findOne({ where: { username: username, password: oldPassword } });
+    changePwd: async (_, { changePwd: { username, oldPassword, newPassword } }) => {
+      const user = await models.user.findOne({ where: { username: username } });
       if (!user) {
+        throw new GraphQLError("User don't exist", {
+          extensions: {
+            code: "USER_DOESNOT_EXIST",
+          },
+        });
+      }  
+      if(oldPassword !== user.password){
         throw new GraphQLError("Old password is incorrect", {
           extensions: {
             code: "OLD_PASSWORD_INCORRECT",
           },
         });
       }
-      if (!newPassword || newPassword.trim() === "") {
-        throw new GraphQLError("New password cannot be empty", {
-          extensions: {
-            code: "EMPTY_NEW_PASSWORD",
-          },
-        });
-      }   
-      if (newPassword !== confirmPassword) {
-        throw new GraphQLError("New password and confirmation password do not match", {
-          extensions: {
-            code: "PASSWORD_CONFIRMATION_MISMATCH",
-          },
-        });
-      }
-    
       try {
         await models.user.update({ password: newPassword }, { where: { username: username } });
             const userData = await resolvers.Mutation.login(_, {
@@ -230,6 +222,43 @@ const resolvers = {
         }
       }
     },
+
+
+    updatePlace: async (_, { updateplace: { studentId, lunchPlace, teaPlace } }) => {
+      try {
+        const [updatedRowCount] = await models.place.update(
+          { lunchPlace, teaPlace },
+          { where: { studentId } }
+        );
+  
+        if (updatedRowCount > 0) {
+          return {
+            flag: true,
+            already: false,
+            message: "Place details updated successfully",
+            place: {
+              studentId,
+              lunchPlace,
+              teaPlace,
+            },
+          };
+        } else {
+          throw new GraphQLError("Error updating place details. User not found", {
+            extensions: {
+              code: "UPDATE_ERROR_USER_NOT_FOUND",
+            },
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        throw new GraphQLError("Error updating place details", {
+          extensions: {
+            code: "UPDATE_ERROR",
+          },
+        });
+      }
+    },
+  
    
 
     mealUpdate: async (_, { mstudentId: { studentId }}) => {
@@ -246,7 +275,7 @@ const resolvers = {
         }
     
         const isLunchTime = currentTime.isBetween(moment('12:00', 'HH:mm'), moment('14:00', 'HH:mm'));
-        const isTeaTime = currentTime.isBetween(moment('16:00', 'HH:mm'), moment('19:00', 'HH:mm'));
+        const isTeaTime = currentTime.isBetween(moment('16:00', 'HH:mm'), moment('18:30', 'HH:mm'));
         const updatedMealDetails = await models.place.update({
             lunchPlace: isLunchTime ? 'done' : student.lunchPlace,
             teaPlace: isTeaTime ? 'done' : student.teaPlace,
@@ -282,6 +311,7 @@ const resolvers = {
       }
     },
   },
+
 
 
   Query:{
@@ -384,6 +414,56 @@ const resolvers = {
       }
     },
 
+    allStudents: async (_) => {
+      try {
+        const studentData = await models.student.findAll({
+          attributes: ["name", "username", "roomNo"],
+          raw: true,
+          order: [['name', 'ASC']],
+        });
+    
+        return studentData;
+      } catch (err) {
+        console.error("Error fetching student data:", err); 
+        throw new GraphQLError("Error fetching student data", {
+          extensions: {
+            code: "FETCH_ERROR",
+          },
+        });
+      }
+    },
+
+    roomBookingDetails: async (_) => {
+      try {
+        const roomBookingDetails = await models.roomcleaning.findAll({
+          attributes: ['roomNo', 'studentId', 'bedSheetChange', 'time'],
+          raw: true,
+          order: [['time', 'ASC']],
+        });
+
+        return roomBookingDetails;
+      } catch (error) {
+        console.error('Error fetching room booking details:', error);
+        throw error;
+      }
+    },
+
+    studentRoomCleaningDetails: async (_, __, context) => {
+      const roomNo = context.user.roomNo; 
+      try {
+        const cleaningDetails = await models.roomcleaning.findAll({
+          where: { roomNo },
+          attributes: ['roomNo', 'studentId', 'bedSheetChange', 'time'],
+          raw: true,
+          order: [['time', 'ASC']],
+        });
+
+        return cleaningDetails;
+      } catch (error) {
+        console.error('Error fetching student room cleaning details:', error);
+        throw new GraphQLError('Failed to fetch student room cleaning details');
+      }
+    },
 
   }
 };

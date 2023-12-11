@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
 import Navbar from "@/components/navbar/Navbar"
 import {Text, Table, TableData, TextInput, Button, LoadingOverlay} from "@mantine/core"
-import { gql, useQuery } from "@apollo/client";
+import { gql, useQuery,useMutation } from "@apollo/client";
 import styles from "@/app/mess/page.module.css"
 import { useState, useEffect } from "react";
 
@@ -19,6 +19,16 @@ const PLACECOUNTDETAILS = gql`
   }
 `;
 
+const MEALUPDATE = gql`
+  mutation Mutation($mstudentId: mstudentId) {
+    mealUpdate(mstudentId: $mstudentId) {
+      already
+      flag
+    }
+  }
+`;
+
+
 const elements = [
   { position: 6, mass: 12.011, symbol: 'C', name: 'Carbon' },
   { position: 7, mass: 14.007, symbol: 'N', name: 'Nitrogen' },
@@ -32,8 +42,32 @@ const elements = [
 export default function Home() {
   const router = useRouter();
   const [placeCount, setplaceCount] = useState([]);
+
+  const [enrolmentNumber, setEnrolmentNumber] = useState("");
   const check = typeof window !== "undefined" && window.localStorage;
   const token = check ? localStorage.getItem("token") : "";
+  const [mealupdate] = useMutation(MEALUPDATE);
+  const markStudent = async () => {
+    try {
+      console.log(token);
+      const { M_data } = await mealupdate({
+        variables: {
+          "mstudentId": {
+            "studentId": enrolmentNumber
+          }
+        },
+        context: {
+          headers: {
+            authorization: token || "",
+          },
+        },
+      });
+      // console.log(M_data.mealupdate);
+    } catch (error) {
+      console.error("Error marking student:", error);
+    }
+  };
+
 
   useEffect(() => {
     if (token !== null) {
@@ -68,15 +102,6 @@ export default function Home() {
     }
   }, [data]);
 
-  const rows = elements.map((element) => (
-    <Table.Tr key={element.name}>
-      <Table.Td>{element.position}</Table.Td>
-      <Table.Td>{element.name}</Table.Td>
-      <Table.Td>{element.symbol}</Table.Td>
-      <Table.Td>{element.mass}</Table.Td>
-    </Table.Tr>
-  ));
-  
 
   const elements2 = [
     {
@@ -99,6 +124,18 @@ export default function Home() {
   ));
 
 
+  const rows = elements.map((element) => (
+    <Table.Tr key={element.name}>
+      <Table.Td>{element.position}</Table.Td>
+      <Table.Td>{element.name}</Table.Td>
+      <Table.Td>{element.symbol}</Table.Td>
+      <Table.Td>{element.mass}</Table.Td>
+    </Table.Tr>
+  ));
+
+
+
+  
     return (
       <main>
         <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: "sm", blur: 4 }} />
@@ -156,9 +193,10 @@ export default function Home() {
                   </div>
 
                   <div className={styles.form}>
-                    <TextInput
+                  <TextInput
                       placeholder="Enrolment Number"
-                      // {...form.getInputProps("username")}
+                      value={enrolmentNumber}
+                      onChange={(e) => setEnrolmentNumber(e.target.value)}
                       radius="xl"
                       size="md"
                       className={styles.inputText}
@@ -171,7 +209,7 @@ export default function Home() {
                       classNames={{
                         root: styles.defaultRadius,
                       }}
-                      // onClick={authenticateUser}
+                      onClick={markStudent}
                     >
                       Mark
                     </Button>

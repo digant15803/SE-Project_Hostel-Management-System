@@ -21,6 +21,33 @@ const TIMESLOTDETAILS = gql`
   }
 `;
 
+const PLACECOUNTDETAILS = gql`
+  query Placecount {
+    placecount {
+      collegeLunchCount
+      collegeTeaCount
+      hostelMessLunchCount
+      hostelMessTeaCount
+    }
+  }
+`;
+
+const MEALUPDATE = gql`
+  mutation Mutation($mstudentId: mstudentId) {
+    mealUpdate(mstudentId: $mstudentId) {
+      already
+      flag
+    }
+  }
+`;
+
+
+
+
+
+
+
+
 // const elements = [
 //     [6, 12.011, ['C','N'], 'Carbon'],
 //     [7, 12.011, ['C','N'], 'Carbon'],
@@ -50,10 +77,7 @@ const TIMESLOTDETAILS = gql`
 //   {time: "14:00", slotsAva: 3},
 // ];
 
-const elements2 = [
-  { place: "UC Cafeteria", lunch: 120, tea: 50 },
-  { place: "Hostel", lunch: 50, tea: 120 },
-];
+
 
 
   
@@ -64,10 +88,35 @@ export default function Home() {
   const searchParams = useSearchParams();
   // const [token, setToken] = useState("");
   const [elements, setElements] = useState();
+  const [placeCount, setplaceCount] = useState([]);
+
+  const [enrolmentNumber, setEnrolmentNumber] = useState("");
+
   const [loadingData, setLoadingData] = useState(false);
   const check = typeof window !== "undefined" && window.localStorage;
   const token = check ? localStorage.getItem("token") : "";
 
+  const [mealupdate] = useMutation(MEALUPDATE);
+  const markStudent = async () => {
+    try {
+      console.log(token);
+      const { M_data } = await mealupdate({
+        variables: {
+          "mstudentId": {
+            "studentId": enrolmentNumber
+          }
+        },
+        context: {
+          headers: {
+            authorization: token || "",
+          },
+        },
+      });
+      // console.log(M_data.mealupdate);
+    } catch (error) {
+      console.error("Error marking student:", error);
+    }
+  };
 
   useEffect(() => {
     if (token !== null) {
@@ -106,12 +155,49 @@ export default function Home() {
       setLoadingData(true);
     }
   }, [data]);
+
+
+
+
+
   
-  
+  const { loading: P_loading, error: P_error, data: P_data } = useQuery(PLACECOUNTDETAILS,{
+    context: {
+      headers: {
+        authorization: token || "",
+      },
+    }
+  });
+  useEffect(() => {
+    if(P_data){
+      setplaceCount(P_data.placecount);
+    }
+  }, [P_data]);
+  console.log(P_data);
   
   const closeRegModal = () => {
     router.push("/admin");
   };
+
+    const elements2 = [
+    {
+      place: "UC Cafeteria",
+      lunch: placeCount.collegeLunchCount,
+      tea: placeCount.collegeTeaCount,
+    },
+    {
+      place: "Hostel",
+      lunch: placeCount.hostelMessLunchCount,
+      tea: placeCount.hostelMessTeaCount,
+    },
+  ];
+  const rows2 = elements2.map((element) => (
+    <Table.Tr key={element.place}>
+      <Table.Td>{element.place}</Table.Td>
+      <Table.Td>{element.lunch}</Table.Td>
+      <Table.Td>{element.tea}</Table.Td>
+    </Table.Tr>
+  ));
 
   let seasonsList = [];
 
@@ -135,23 +221,6 @@ export default function Home() {
     </Table.Tr>
   ));
   
-  // const rows = elements.map((element) => (
-  //   <Table.Tr key={element[0]}>
-  //     <Table.Td><Center><div>{element[0]}</div></Center></Table.Td>
-  //     <Table.Td><Center><div>{element[1]}</div></Center></Table.Td>
-  //       {roer(element[2])}
-  //     <Table.Td>{seasonsList}</Table.Td>
-  //     <Table.Td><Center><div>{element[3]}</div></Center></Table.Td>
-  //   </Table.Tr>
-  // ));
-
-  const rows2 = elements2.map((element) => (
-    <Table.Tr key={element.place}>
-      <Table.Td>{element.place}</Table.Td>
-      <Table.Td>{element.lunch}</Table.Td>
-      <Table.Td>{element.tea}</Table.Td>
-    </Table.Tr>
-  ));
     return (
       <main>
         <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: "sm", blur: 4 }} />
@@ -222,6 +291,8 @@ export default function Home() {
                     <TextInput
                       placeholder="Enrolment Number"
                       // {...form.getInputProps("username")}
+                      value={enrolmentNumber}
+                      onChange={(e) => setEnrolmentNumber(e.target.value)}
                       radius="xl"
                       size="md"
                       className={styles.inputText}
@@ -235,6 +306,7 @@ export default function Home() {
                         root: styles.defaultRadius,
                       }}
                       // onClick={authenticateUser}
+                      onClick={markStudent}
                     >
                       Mark
                     </Button>

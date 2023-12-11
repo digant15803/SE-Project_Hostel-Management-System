@@ -20,10 +20,10 @@ import {
   showErrorNotification,
 } from '@/utils/notifications.helper';
 
-const ResetPassword = gql(`
-  mutation changePwd($changePwd: changePwd) {
+const ChangePwd = gql(`
+  mutation ChangePwd($changePwd: changePwd) {
     changePwd(changePwd: $changePwd) {
-      success
+      token
     }
   }
 `);
@@ -37,38 +37,55 @@ function PasswordResetComp({ onClose, showLoadingOverlay }) {
       newPassword: '',
       confirmPassword: '',
     },
-    validate: {
+    validate: { 
       username: (value) => value.trim().length > 0,
       oldPassword: (value) => value.trim().length > 0,
       newPassword: (value) => value.trim().length > 0,
       confirmPassword: (value) => value === form.values.newPassword,
     },
   });
-  // const [changepwd] = useMutation(ChangePwd);
-  const [resetPassword] = useMutation(ResetPassword);
+
+  const [changepwd] = useMutation(ChangePwd);
   const [resetSuccess, setResetSuccess] = useState(false);
 
   const handleResetPassword = async () => {
+    console.log(form.values);
+    console.log(JSON.stringify(createHmac('sha256', secret).update(form.values.oldPassword).digest('hex')).slice(1,-1));
+    console.log(JSON.stringify(createHmac('sha256', secret).update(form.values.newPassword).digest('hex')).slice(1,-1))
     try {
-      const { data } = await resetPassword({
-        variables: {
-          resetPasswordInput: {
+      const { data } = await changepwd({
+        variables: { 
+          changePwd: {
             username: form.values.username,
-            oldPassword: form.values.oldPassword,
+            oldPassword: JSON.stringify(createHmac('sha256', secret).update(form.values.oldPassword).digest('hex')).slice(1,-1),
             newPassword: JSON.stringify(createHmac('sha256', secret).update(form.values.newPassword).digest('hex')).slice(1,-1),
           },
         },
       });
 
       console.log('RESET PASSWORD -- SUCCESS', data);
-      
-      if (data.changePwd.success) {
-        setResetSuccess(true);
-        showSuccessNotification('Password Reset', 'Your password has been reset successfully.');
-        router.push('/login');
-      } else {
-        showErrorNotification('Password Reset Failed', 'Failed to reset password.');
-      }
+      showErrorNotification('Password Changed',"");
+      const info = jwtDecode(data.changePwd.token);
+      console.log(data.changePwd.token);
+            console.log(info);
+            localStorage.setItem("token", data.changePwd.token);
+            if(info.username==null){
+              setCreatePassword(true);
+            }
+            else{
+              if(info.position==="Student"){
+                router.push("\student");
+              }
+              else if(info.position==="Mess"){
+                router.push("\mess");
+              }
+              else if(info.position==="House keeping"){
+                router.push("\housekeeping");
+              }
+              else{
+                router.push("\admin");
+              }
+            }
     } catch (error) {
       console.log('RESET PASSWORD -- ERROR', error);
       showErrorNotification('Failed to reset password', error?.message);

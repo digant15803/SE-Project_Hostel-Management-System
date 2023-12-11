@@ -13,6 +13,7 @@ import {
   Table
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { gql, useMutation, useQuery } from "@apollo/client";
 
 
 import styles from "./orderDetails.module.css";
@@ -26,8 +27,31 @@ import styles from "./orderDetails.module.css";
 // import SWR_CONSTANTS from "@/utils/swrConstants";
 // import { mutate } from "swr";
 
+const STUDETNBOOKINGDETAILS =gql`
+  query StudentRoomCleaningDetails {
+    studentRoomCleaningDetails {
+      bedSheetChange
+      roomNo
+      studentId
+      time
+    }
+  }
+`
+
 function RegComp() {
   const router = useRouter();
+  
+  const check = typeof window !== "undefined" && window.localStorage;
+  const token = check ? localStorage.getItem("token") : "";
+    const { loading, error, data } = useQuery(STUDETNBOOKINGDETAILS,{
+      context: {
+        headers: {
+          authorization: token || "",
+        },
+      }
+    });
+
+
   const form = useForm({
     initialValues: {
       username: "",
@@ -72,6 +96,13 @@ function RegComp() {
 //   };
 
   useEffect(() => {
+    if (error) {
+      console.error("Error fetching student room cleaning details:", error);
+    }
+  }, [error]);
+
+
+  useEffect(() => {
     console.log(user);
   }, [user]);
 
@@ -106,10 +137,19 @@ function RegComp() {
                     <Table.Tr>
                       <Table.Th>Time Slot</Table.Th>
                       <Table.Th>Bed-Sheet Change</Table.Th>
-                      <Table.Th>Name</Table.Th>
+                      <Table.Th>Student Id</Table.Th>
                     </Table.Tr>
                   </Table.Thead>
-                  <Table.Tbody></Table.Tbody>
+                  <Table.Tbody>
+                  {data &&
+                      data.studentRoomCleaningDetails.map((booking) => (
+                        <Table.Tr key={booking.time}>
+                          <Table.Td>{booking.time}</Table.Td>
+                          <Table.Td>{booking.bedSheetChange ? "Yes" : "No"}</Table.Td>
+                          <Table.Td>{booking.studentId}</Table.Td>
+                        </Table.Tr>
+                      ))}
+                  </Table.Tbody>
                 </Table>
 
             </div>

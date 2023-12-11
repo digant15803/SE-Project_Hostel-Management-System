@@ -63,18 +63,18 @@ function AuthComp() {
   const [login] = useMutation(Login);
   const [changepwd] = useMutation(ChangePwd);
   const [createPassword, setCreatePassword] = useState(false);
-  // const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
 
-  // const handleResetPassword = async () => {
-  //   try {
+  const handleResetPassword = async () => {
+    try {
       
-  //     setCreatePassword(false);
-  //     setShowPasswordReset(false);
-  //   } catch (error) {
-  //     console.log('RESET PASSWORD -- ERROR', error);
-  //     showErrorNotification('Failed to reset password', error?.message);
-  //   }
-  // };
+      setCreatePassword(false);
+      setShowPasswordReset(false);
+    } catch (error) {
+      console.log('RESET PASSWORD -- ERROR', error);
+      showErrorNotification('Failed to reset password', error?.message);
+    }
+  };
 
   const eventLogin = async () => {
     if (createPassword) {
@@ -186,14 +186,9 @@ function AuthComp() {
 
   return (
     <div className={styles.container}>
-      <div>
-      
-      {createPassword ? (
-        <Title order={4}>Create Password</Title>
-      ) : (
+      {!showPasswordReset && 
+      <div> 
         <Title order={4}>Login</Title>
-      )}
-      
       <div className={styles.form}>
         <div className={styles.methodSelections}>
           <div className={styles.methodContainer}>
@@ -228,9 +223,9 @@ function AuthComp() {
               )}
             </div>
     
-            {/* <span className={styles.forgotPasswordButton}>
+            <span className={styles.forgotPasswordButton}>
                    <a href="#" onClick={() => setShowPasswordReset(true)}>Set password</a>
-                </span> */}
+                </span>
             
             <Button
               fullWidth
@@ -259,13 +254,15 @@ function AuthComp() {
           </div>
         </div>
       </div>
+      
       </div>
-      {/* {showPasswordReset && (
+      }
+      {showPasswordReset && (
         <PasswordResetComp
         onClose={() => setShowPasswordReset(false)}
         onReset={handleResetPassword}
       />
-      )} */}
+      )}
       </div>
       
       
