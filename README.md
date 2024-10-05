@@ -1,12 +1,10 @@
 <div align="center">
   <h1>Hostel Management System</h1>
-  <img src="https://hostel-management-system.s3.amazonaws.com/logo.jpeg" width="380"/>
 </div>
 
 ## Objective
 
 Our Hostel Management System is designed to streamline the management of student accommodations. By providing a centralized platform, we aim to enhance the living experience of students while ensuring efficient operations for hostel managers. With features like student registration, room assignment, and mess management, we prioritize transparency and support for all stakeholders, creating a harmonious living environment for students.
-s
 ## What does it do?
 
 ### For Admin (Hostel Manager):
@@ -45,8 +43,6 @@ s
 
    ```bash
    npm start
-  
-
 ## Screenshots
 
 ![landing](https://hostel-management-system.s3.amazonaws.com/Landing+Page.jpeg)
@@ -82,8 +78,4 @@ s
 **Madhvendrasinh Jhala**  
 [![portfolio](https://img.shields.io/badge/github_portfolio-000?style=for-the-badge&logo=ko-fi&logoColor=white)]()  
 [![linkedin](https://img.shields.io/badge/linkedin-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/madhvendra-jhala-74335320a/)
-
-**Deep Patel**  
-[![portfolio](https://img.shields.io/badge/github_portfolio-000?style=for-the-badge&logo=ko-fi&logoColor=white)](https://github.com/malay44)  
-[![linkedin](https://img.shields.io/badge/linkedin-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/deep-patel-0032541b9/)
 
